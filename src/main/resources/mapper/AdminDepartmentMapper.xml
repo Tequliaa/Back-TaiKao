@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SurveySystem.Mapper.AdminDepartmentMapper">
+
+    <!-- 添加用户-部门映射关系 -->
+    <insert id="addMapping">
+        INSERT INTO AdminDepartmentMapping (user_id, department_id)
+        VALUES (#{userId}, #{departmentId})
+    </insert>
+
+    <!-- 删除用户-部门映射关系 -->
+    <delete id="deleteMapping">
+        DELETE FROM AdminDepartmentMapping
+        WHERE user_id = #{userId} AND department_id = #{departmentId}
+    </delete>
+
+    <!-- 根据用户ID获取管理的部门ID列表 -->
+    <select id="getDepartmentsByUserId" resultType="int">
+        SELECT department_id
+        FROM AdminDepartmentMapping
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 批量添加用户-部门映射关系 -->
+    <insert id="addBatchMapping">
+        INSERT INTO AdminDepartmentMapping (user_id, department_id) VALUES
+        <foreach collection="departmentIds" item="departmentId" separator=",">
+            (#{userId}, #{departmentId})
+        </foreach>
+    </insert>
+
+    <!-- 批量删除用户-部门映射关系 -->
+    <delete id="deleteBatchMapping">
+        DELETE FROM AdminDepartmentMapping
+        WHERE (user_id, department_id) IN
+        <foreach collection="departmentIds" item="departmentId" open="(" separator="," close=")">
+            (#{userId}, #{departmentId})
+        </foreach>
+    </delete>
+
+</mapper>

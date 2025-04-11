@@ -1,0 +1,74 @@
+package SurveySystem.Service.Impl;
+
+import SurveySystem.Mapper.DepartmentMapper;
+import SurveySystem.Mapper.OptionMapper;
+import SurveySystem.Model.Option;
+import SurveySystem.Service.OptionService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+@Service
+public class OptionServiceImpl implements OptionService {
+    private final OptionMapper optionMapper;
+
+    @Autowired
+    public OptionServiceImpl(OptionMapper optionMapper) {
+        this.optionMapper = optionMapper;
+    }
+    @Override
+    public boolean addOption(Option option) {
+        return optionMapper.addOption(option);
+    }
+
+    @Override
+    public boolean updateOption(Option option) {
+        return optionMapper.updateOption(option);
+    }
+
+    @Override
+    public boolean deleteOption(int optionId) {
+        return optionMapper.deleteOption(optionId);
+    }
+
+    @Override
+    public Option getOptionById(int optionId) {
+        return optionMapper.getOptionById(optionId);
+    }
+
+    @Override
+    public List<Option> getRowOptionsByQuestionId(int questionId) {
+        return optionMapper.getRowOptionsByQuestionId(questionId);
+    }
+
+    @Override
+    public List<Option> getColumnOptionsByQuestionId(int questionId) {
+        return optionMapper.getColumnOptionsByQuestionId(questionId);
+    }
+
+    @Override
+    public List<Option> getOptionsWithCheckCountByQuestionId(int questionId, int departmentId) {
+        return optionMapper.getOptionsWithCheckCountByQuestionId(questionId,departmentId);
+    }
+
+    @Override
+    public List<Option> getOptionsByQuestionId(int questionId) {
+        return optionMapper.getOptionsByQuestionId(questionId);
+    }
+
+    @Override
+    public List<Option> getAllOptions() {
+        return optionMapper.getAllOptions();
+    }
+
+    @Override
+    public List<Option> getOptionsByPage(int currentPage, int pageSize, int questionId) {
+        int offset = (currentPage-1)*pageSize;
+        return optionMapper.getOptionsByPage(offset,pageSize,questionId);
+    }
+
+    @Override
+    public int getOptionCount(int questionId) {
+        return optionMapper.getOptionCount(questionId);
+    }
+}

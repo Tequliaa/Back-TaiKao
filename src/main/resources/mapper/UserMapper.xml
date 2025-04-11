@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SurveySystem.Mapper.UserMapper">
+
+    <!-- 注册用户 -->
+    <insert id="registerUser" parameterType="User">
+        INSERT INTO Users (name, username, password, salt)
+        VALUES (#{username}, #{username}, #{password}, #{salt})
+    </insert>
+
+    <!-- 通过用户ID查找用户 -->
+    <select id="getUserByUserId" parameterType="int" resultType="User">
+        SELECT
+            u.id,
+            u.name,
+            u.username,
+            u.password,
+            u.salt,
+            u.role,
+            u.department_id AS departmentId,
+            d.name AS departmentName
+        FROM Users u
+                 LEFT JOIN Departments d ON u.department_id = d.id
+        WHERE u.id = #{userId}
+    </select>
+
+    <!-- 通过用户名查找用户 -->
+    <select id="getUserByUsername" parameterType="String" resultType="User">
+        SELECT
+            u.id,
+            u.name,
+            u.username,
+            u.password,
+            u.salt,
+            u.role,
+            u.department_id AS departmentId,
+            d.name AS departmentName
+        FROM Users u
+                 LEFT JOIN Departments d ON u.department_id = d.id
+        WHERE u.username = #{username}
+    </select>
+
+    <!-- 更新用户密码 -->
+    <update id="updatePassword" parameterType="User">
+        UPDATE Users
+        SET password = #{password}, salt = #{salt}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新用户信息 -->
+    <update id="updateUser" parameterType="User">
+        UPDATE Users
+        SET department_id = #{departmentId}, role = #{role},name=#{name}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除用户 -->
+    <delete id="deleteUserById" parameterType="int">
+        DELETE FROM Users WHERE id = #{userId}
+    </delete>
+
+    <!-- 获取所有用户信息 -->
+    <select id="getAllUsers" resultType="User">
+        SELECT
+            u.id,
+            u.name,
+            u.username,
+            u.password,
+            u.role,
+            u.department_id AS departmentId,
+            d.name AS departmentName
+        FROM Users u
+                 LEFT JOIN Departments d ON u.department_id = d.id
+    </select>
+
+    <!-- 分页查询用户 -->
+    <select id="getUsersByPage" resultType="User">
+        SELECT
+        u.id,
+        u.name,
+        u.username,
+        u.password,
+        u.role,
+        u.department_id AS departmentId,
+        d.name AS departmentName
+        FROM Users u
+        LEFT JOIN Departments d ON u.department_id = d.id
+        <where>
+            <if test="departmentId != 0">
+                u.department_id = #{departmentId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                <if test="departmentId != 0">AND</if>
+                (u.name LIKE CONCAT('%', #{keyword}, '%') OR u.role LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="getUsersByDepartmentId" resultType="User">
+        SELECT
+            u.id,
+            u.name,
+            u.username,
+            u.password,
+            u.role,
+            u.department_id AS departmentId,
+            d.name AS departmentName
+        FROM
+            Users u
+                LEFT JOIN
+            Departments d ON u.department_id = d.id
+        WHERE
+            u.department_id = #{departmentId}
+    </select>
+
+    <!-- 获取用户总数 -->
+    <select id="getUserCount" resultType="int">
+        SELECT COUNT(*) FROM Users
+        <where>
+            <if test="departmentId != 0">
+                department_id = #{departmentId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                <if test="departmentId != 0">AND</if>
+                (username LIKE CONCAT('%', #{keyword}, '%') OR role LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+</mapper>

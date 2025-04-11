@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SurveySystem.Mapper.OptionMapper">
+
+    <resultMap id="optionResultMap" type="Option">
+        <id property="optionId" column="option_id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="type" column="type"/>
+        <result property="description" column="description"/>
+        <result property="sortKey" column="sort_key"/>
+        <result property="isOpenOption" column="is_open"/>
+        <result property="isSkip" column="is_skip"/>
+        <result property="skipTo" column="skip_to"/>
+        <result property="questionName" column="question_name"/>
+        <result property="checkCount" column="count"/>
+    </resultMap>
+
+    <insert id="addOption" parameterType="Option" useGeneratedKeys="true" keyProperty="optionId">
+        INSERT INTO Options
+            (question_id, type, description, sort_key, is_open, is_skip)
+        VALUES
+            (#{questionId}, #{type}, #{description}, #{sortKey}, #{isOpenOption}, #{isSkip})
+    </insert>
+
+    <update id="updateOption" parameterType="Option">
+        UPDATE Options SET
+                           question_id = #{questionId},
+                           type = #{type},
+                           description = #{description},
+                           is_open = #{isOpenOption},
+                           is_skip = #{isSkip},
+                           skip_to = #{skipTo}
+        WHERE option_id = #{optionId}
+    </update>
+
+    <delete id="deleteOption" parameterType="int">
+        DELETE FROM Options WHERE option_id = #{optionId}
+    </delete>
+
+    <select id="getOptionById" resultMap="optionResultMap" parameterType="int">
+        SELECT * FROM Options WHERE option_id = #{optionId}
+    </select>
+
+    <select id="getOptionsWithCheckCountByQuestionId" resultMap="optionResultMap">
+        SELECT o.*,
+               (SELECT COUNT(*)
+                FROM Responses r
+                         JOIN Users u ON r.user_id = u.id
+                WHERE r.option_id = o.option_id
+                  AND r.is_valid = 1
+                  AND (u.department_id = #{departmentId} OR #{departmentId} = 0)) AS count
+        FROM Options o
+        WHERE o.question_id = #{questionId}
+        ORDER BY o.sort_key
+    </select>
+
+    <select id="getOptionsByQuestionId" resultMap="optionResultMap" parameterType="int">
+        SELECT * FROM Options WHERE question_id = #{questionId} ORDER BY sort_key
+    </select>
+
+    <select id="getAllOptions" resultMap="optionResultMap">
+        SELECT o.*, q.description AS question_name
+        FROM options o
+                 JOIN questions q ON o.question_id = q.question_id
+    </select>
+
+    <select id="getOptionsByPage" resultMap="optionResultMap">
+        SELECT o.*, q.description AS question_name
+        FROM options o
+        JOIN questions q ON o.question_id = q.question_id
+        <if test="questionId != 0">
+            WHERE o.question_id = #{questionId}
+        </if>
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="getRowOptionsByQuestionId" resultMap="optionResultMap" parameterType="int">
+        SELECT * FROM Options
+        WHERE question_id = #{questionId} AND type = '行选项'
+        ORDER BY sort_key
+    </select>
+
+    <select id="getColumnOptionsByQuestionId" resultMap="optionResultMap" parameterType="int">
+        SELECT * FROM Options
+        WHERE question_id = #{questionId} AND type = '列选项'
+        ORDER BY sort_key
+    </select>
+
+    <select id="getOptionCount" resultType="int">
+        SELECT COUNT(*) FROM options
+        <if test="questionId != 0">
+            WHERE question_id = #{questionId}
+        </if>
+    </select>
+</mapper>

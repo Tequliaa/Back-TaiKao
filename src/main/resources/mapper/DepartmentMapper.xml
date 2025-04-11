@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SurveySystem.Mapper.DepartmentMapper">
+
+    <!-- 获取指定用户可管理的所有部门信息 -->
+    <select id="getAllDepartmentsByUserId" resultType="Department">
+        SELECT d.* FROM Departments d
+                            JOIN AdminDepartmentMapping adm ON d.id = adm.department_id
+        WHERE adm.user_id = #{userId}
+    </select>
+
+    <!-- 获取所有部门信息 -->
+    <select id="getAllDepartments" resultType="Department">
+        SELECT * FROM Departments
+    </select>
+
+    <!-- 获取指定用户可管理的部门信息（分页和搜索） -->
+    <select id="getAllDepartmentsByPages" resultType="Department">
+        SELECT d.* FROM Departments d
+        JOIN AdminDepartmentMapping adm ON d.id = adm.department_id
+        WHERE adm.user_id = #{userId}
+        <if test="keyword != null and keyword != ''">
+            AND d.name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 获取指定用户可管理的部门总数（支持搜索） -->
+    <select id="getDepartmentCount" resultType="int">
+        SELECT COUNT(*) FROM Departments d
+        JOIN AdminDepartmentMapping adm ON d.id = adm.department_id
+        WHERE adm.user_id = #{userId}
+        <if test="keyword != null and keyword != ''">
+            AND d.name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+    </select>
+
+    <!-- 根据 ID 获取单个部门信息 -->
+    <select id="getDepartmentById" resultType="Department">
+        SELECT * FROM Departments WHERE id = #{id}
+    </select>
+
+    <!-- 添加新部门，返回新添加的部门的 id -->
+    <insert id="addDepartment" parameterType="Department" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO Departments (name, description, created_at, updated_at)
+        VALUES (#{name}, #{description}, NOW(), NOW())
+    </insert>
+
+    <!-- 更新部门信息 -->
+    <update id="updateDepartment" parameterType="Department">
+        UPDATE Departments
+        SET name = #{name}, description = #{description}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除部门 -->
+    <delete id="deleteDepartment">
+        DELETE FROM Departments WHERE id = #{id}
+    </delete>
+
+</mapper>

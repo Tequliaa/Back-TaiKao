@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SurveySystem.Mapper.SurveyMapper">
+
+    <select id="getAllSurveys" resultType="Survey">
+        SELECT * FROM surveys WHERE created_by = #{userId}
+    </select>
+
+    <select id="getSurveyById" resultType="Survey">
+        SELECT * FROM surveys WHERE survey_id = #{surveyId}
+    </select>
+
+    <select id="getSurveysByPage" resultMap="surveyResultMap">
+        SELECT
+        s.*,
+        u.name AS createdByName  <!-- 联表查询获取创建者姓名 -->
+        FROM surveys s
+        LEFT JOIN users u ON s.created_by = u.id  <!-- 关联用户表 -->
+        <where>
+            <!-- 权限控制 -->
+            (s.created_by = #{userId} OR #{role} = '超级管理员')
+
+            <!-- 模糊查询 -->
+            <if test="keyword != null and keyword != ''">
+                AND s.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 定义结果映射 -->
+    <resultMap id="surveyResultMap" type="Survey">
+        <!-- 主表字段 -->
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="allowView" column="allow_view"/>
+        <result property="status" column="status"/>
+        <!-- 其他survey字段... -->
+        <!-- 关联字段 -->
+        <result property="createdByName" column="createdByName"/>
+    </resultMap>
+
+    <!-- 修改后的总数统计查询 -->
+    <select id="getSurveyCount" resultType="int">
+        SELECT COUNT(*) FROM surveys
+        <where>
+            (created_by = #{userId} OR #{role} = '超级管理员')
+            <if test="keyword != null and keyword != ''">
+                AND name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="createSurvey">
+        INSERT INTO surveys (name, description, allow_view, created_by, created_at)
+        VALUES (#{name}, #{description}, #{allowView}, #{createdBy}, NOW())
+    </insert>
+
+    <update id="updateSurvey">
+        UPDATE surveys
+        SET name = #{name}, description = #{description}, allow_view = #{allowView},
+            updated_by = #{updatedBy}, updated_at = NOW()
+        WHERE survey_id = #{surveyId}
+    </update>
+
+    <delete id="deleteSurvey">
+        DELETE FROM surveys WHERE survey_id = #{surveyId}
+    </delete>
+
+</mapper>
