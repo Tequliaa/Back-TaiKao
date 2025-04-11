@@ -3,6 +3,8 @@ package SurveySystem.Controller;
 import SurveySystem.Model.Result;
 import SurveySystem.Model.User;
 import SurveySystem.Model.UserSurvey;
+import SurveySystem.Service.DepartmentService;
+import SurveySystem.Service.SurveyService;
 import SurveySystem.Service.UserService;
 import SurveySystem.Service.UserSurveyService;
 import org.apache.poi.ss.usermodel.*;
@@ -26,10 +28,15 @@ public class UserSurveyController {
 
     private final UserSurveyService userSurveyService;
     private final UserService userService;
+    private final SurveyService surveyService;
+    private final DepartmentService departmentService;
 
-    public UserSurveyController(UserSurveyService userSurveyService, UserService userService) {
+    public UserSurveyController(UserSurveyService userSurveyService, UserService userService,
+                                SurveyService surveyService,DepartmentService departmentService) {
         this.userSurveyService = userSurveyService;
         this.userService = userService;
+        this.surveyService = surveyService;
+        this.departmentService = departmentService;
     }
 
     @GetMapping("/unfinishedUsers")
@@ -117,12 +124,18 @@ public class UserSurveyController {
     @GetMapping("/exportUnfinishedList")
     public void exportUnfinishedList(
             @RequestParam int surveyId,
-            @RequestParam int departmentId,
+            @RequestParam(defaultValue = "0") int departmentId,
             HttpServletResponse response) throws IOException, SQLException {
+
+        String surveyName= surveyService.getSurveyById(surveyId).getName();
+        String departmentName="总体";
+        if(departmentId!=0){
+            departmentName=departmentService.getDepartmentById(departmentId).getName();
+        }
 
         // 设置响应头
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        String fileName = URLEncoder.encode("未完成名单-" + LocalDate.now() + ".xlsx", StandardCharsets.UTF_8);
+        String fileName = URLEncoder.encode(surveyName+"_"+departmentName+"_未完成名单-" + LocalDate.now() + ".xlsx", StandardCharsets.UTF_8);
         response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
 
         // 创建工作簿和工作表

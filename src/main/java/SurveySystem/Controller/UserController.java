@@ -2,9 +2,16 @@ package SurveySystem.Controller;
 
 import SurveySystem.Model.Result;
 import SurveySystem.Model.User;
+import SurveySystem.Service.DepartmentService;
 import SurveySystem.Service.UserService;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import SurveySystem.Utils.HashUtils;
@@ -14,16 +21,19 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
     private final UserService userService;
+    public final DepartmentService departmentService;
     private final StringRedisTemplate redisTemplate;
 
     // 依赖注入（替代手动 new 和 init()）
-    public UserController(UserService userService, StringRedisTemplate redisTemplate) {
+    public UserController(UserService userService,DepartmentService departmentService, StringRedisTemplate redisTemplate) {
         this.userService = userService;
+        this.departmentService = departmentService;
         this.redisTemplate = redisTemplate;
     }
 
@@ -143,5 +153,56 @@ public class UserController {
     public Result<Void> deleteUser(@RequestParam int id) {
         userService.deleteUserById(id);
         return Result.success();
+    }
+
+    @GetMapping("/export")
+    public void exportUsers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int departmentId,
+            HttpServletResponse response) throws IOException {
+        String departmentName="所有用户";
+        if(departmentId!=0){
+            departmentName=departmentService.getDepartmentById(departmentId).getName();
+        }
+        //
+        // 设置响应头
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        String fileName = URLEncoder.encode("用户列表_" +departmentName+ LocalDate.now() + ".xlsx", StandardCharsets.UTF_8);
+        response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
+
+        // 创建工作簿和工作表
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("用户列表");
+
+            // 创建标题行
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"用户ID", "用户名","用户昵称","所属部门", "角色"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+            }
+
+            // 获取数据
+            List<User> users = userService.getUsersByPage(1, Integer.MAX_VALUE, keyword, departmentId);
+
+            // 填充数据
+            int rowNum = 1;
+            for (User user : users) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(user.getId());
+                row.createCell(1).setCellValue(user.getUsername());
+                row.createCell(2).setCellValue(user.getName());
+                row.createCell(3).setCellValue(user.getDepartmentName());
+                row.createCell(4).setCellValue(user.getRole());
+            }
+
+            // 自动调整列宽
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            // 写入响应流
+            workbook.write(response.getOutputStream());
+        }
     }
 }
