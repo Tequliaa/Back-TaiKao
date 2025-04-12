@@ -21,6 +21,15 @@
         )
     </insert>
 
+    <!-- 批量插入用户 -->
+    <insert id="batchInsertUsers" parameterType="java.util.List">
+        INSERT INTO Users(name,username,password,salt,department_id)
+        VALUES
+        <foreach collection="list" item="user" separator=",">
+            (#{user.name},#{user.username},#{user.password},#{user.salt},#{user.departmentId})
+        </foreach>
+    </insert>
+
     <!-- 通过用户ID查找用户 -->
     <select id="getUserByUserId" parameterType="int" resultType="User">
         SELECT

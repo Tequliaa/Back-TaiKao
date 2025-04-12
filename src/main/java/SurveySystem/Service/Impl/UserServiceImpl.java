@@ -6,6 +6,7 @@ import SurveySystem.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -19,6 +20,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean registerUser(User user) {
         return userMapper.registerUser(user);
+    }
+
+    @Override
+    public int batchInsertUsers(List<User> userList) {
+        // 过滤掉已存在的用户名
+        List<User> newUsers = userList.stream()
+                .filter(user -> getUserByUsername(user.getUsername()) == null)
+                .collect(Collectors.toList());
+
+        if (!newUsers.isEmpty()) {
+            return userMapper.batchInsertUsers(newUsers);
+        }
+        return 0;
     }
 
     @Override

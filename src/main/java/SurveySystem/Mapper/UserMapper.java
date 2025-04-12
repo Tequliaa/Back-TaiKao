@@ -8,6 +8,7 @@ import java.util.List;
 @Mapper
 public interface UserMapper {
     boolean registerUser(User user); // 注册用户
+    int batchInsertUsers(List<User> userList);
     User getUserByUserId(int id);
     User getUserByUsername(String username); // 通过用户名获取用户
     boolean updatePassword(User user); //重置用户密码
