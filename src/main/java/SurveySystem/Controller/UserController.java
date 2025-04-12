@@ -1,5 +1,6 @@
 package SurveySystem.Controller;
 
+import SurveySystem.Model.Department;
 import SurveySystem.Model.Result;
 import SurveySystem.Model.User;
 import SurveySystem.Service.DepartmentService;
@@ -7,6 +8,7 @@ import SurveySystem.Service.UserService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -203,6 +205,76 @@ public class UserController {
 
             // 写入响应流
             workbook.write(response.getOutputStream());
+        }
+    }
+
+    @PostMapping("/import")
+    public Result<Void> importUsers(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return Result.error("请选择要导入的文件");
+        }
+
+        try {
+            // 检查文件类型
+            String fileName = file.getOriginalFilename();
+            if (fileName == null || (!fileName.endsWith(".xlsx") && !fileName.endsWith(".xls"))) {
+                return Result.error("请上传Excel文件");
+            }
+
+            Workbook workbook = WorkbookFactory.create(file.getInputStream());
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // 跳过标题行
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                User user = new User();
+                user.setUsername(getCellValueAsString(row.getCell(0))); // 用户名
+                user.setName(getCellValueAsString(row.getCell(1))); // 用户昵称
+                String departmentName = getCellValueAsString(row.getCell(2)); // 部门名称
+                System.out.println("部门名称："+departmentName);
+                user.setRole(getCellValueAsString(row.getCell(3))); // 角色
+
+                // 设置默认密码
+                String defaultPassword = "123456";
+                String salt = HashUtils.getSalt();
+                String hashedPassword = HashUtils.hashPassword(defaultPassword, salt);
+                user.setPassword(hashedPassword);
+                user.setSalt(salt);
+
+                // 根据部门名称查找部门ID
+                if (!departmentName.isEmpty()) {
+                    Department department = departmentService.getDepartmentByName(departmentName);
+                    if (department != null) {
+                        System.out.println("部门Id为："+department.getId());
+                        user.setDepartmentId(department.getId());
+                    }
+                }
+
+                // 检查用户名是否已存在
+                if (userService.getUserByUsername(user.getUsername()) == null) {
+                    userService.registerUser(user);
+                }
+            }
+
+            workbook.close();
+            return Result.success();
+        } catch (Exception e) {
+            return Result.error("导入失败：" + e.getMessage());
+        }
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "";
+
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                return String.valueOf((int) cell.getNumericCellValue());
+            default:
+                return "";
         }
     }
 }

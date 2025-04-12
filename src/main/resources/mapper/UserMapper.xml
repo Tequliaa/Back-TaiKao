@@ -2,10 +2,23 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="SurveySystem.Mapper.UserMapper">
 
+<!--    &lt;!&ndash; 注册用户 &ndash;&gt;-->
+<!--    <insert id="registerUser" parameterType="User">-->
+<!--        INSERT INTO Users (name, username, password, salt)-->
+<!--        VALUES (#{name}, #{username}, #{password}, #{salt})-->
+<!--    </insert>-->
     <!-- 注册用户 -->
     <insert id="registerUser" parameterType="User">
-        INSERT INTO Users (name, username, password, salt)
-        VALUES (#{username}, #{username}, #{password}, #{salt})
+        INSERT INTO Users (name, username, password, salt
+        <if test="departmentId != null and departmentId != 0">
+            , department_id
+        </if>
+        )
+        VALUES (#{name}, #{username}, #{password}, #{salt}
+        <if test="departmentId != null and departmentId != 0">
+            , #{departmentId}
+        </if>
+        )
     </insert>
 
     <!-- 通过用户ID查找用户 -->

@@ -21,6 +21,7 @@ public interface DepartmentMapper {
 
     // 根据 ID 获取单个部门信息
     Department getDepartmentById(int id);
+    Department getDepartmentByName(String departmentName);
 
     // 添加新部门
     int addDepartment(Department department);

@@ -43,6 +43,11 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
+    public Department getDepartmentByName(String departmentName) {
+        return departmentMapper.getDepartmentByName(departmentName);
+    }
+
+    @Override
     public int addDepartment(Department department) {
         return departmentMapper.addDepartment(department);
     }
