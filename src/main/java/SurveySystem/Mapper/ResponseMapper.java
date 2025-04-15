@@ -12,6 +12,7 @@ public interface ResponseMapper {
     void saveResponses(List<Response> responses);
     void resetIsValidForResponses(int userId, int surveyId);
     void updateResponse(Response response);
+    void updateFileValid(Response response);
     void updateResponseData(Response response);
     int countSurveyResponses(int surveyId) ;
     List<Response> getSurveyResponsesSummary(int surveyId, int offset, int pageSize);

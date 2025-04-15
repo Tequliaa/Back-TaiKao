@@ -3,6 +3,7 @@ package SurveySystem.Controller;
 import SurveySystem.Model.*;
 import SurveySystem.Service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -170,9 +171,11 @@ public class ResponseController {
     }
 
     private void handleFileUploads(Map<String, MultipartFile> fileMap, int surveyId, int userId, String ipAddress) throws IOException {
-        String uploadPath = System.getProperty("user.dir") + File.separator + "/uploads" + File.separator;
-        //"static/uploads"
-        File uploadDir = new File(uploadPath);
+        System.out.println("有新文件上传");
+        // 使用明确的相对路径，基于应用根目录
+        //String uploadPath = new File("").getAbsolutePath() + File.separator + "uploads" + File.separator;
+        String staticPath = new ClassPathResource("static/uploads").getFile().getAbsolutePath();
+        File uploadDir = new File(staticPath);
         if (!uploadDir.exists()) {
             uploadDir.mkdirs();
         }
@@ -180,14 +183,11 @@ public class ResponseController {
         List<String> allowedFileTypes = Arrays.asList("jpg", "jpeg", "png", "gif", "pdf", "docx", "xlsx");
 
         for (Map.Entry<String, MultipartFile> entry : fileMap.entrySet()) {
-            String paramName = entry.getKey(); // 例如 file_123
+            String paramName = entry.getKey();
             MultipartFile file = entry.getValue();
 
             if (!file.isEmpty()) {
-                // 解析 questionId
                 int questionId = Integer.parseInt(paramName.split("_")[1]);
-
-                // 获取文件后缀
                 String fileExtension = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".") + 1).toLowerCase();
 
                 if (!allowedFileTypes.contains(fileExtension)) {
@@ -198,22 +198,28 @@ public class ResponseController {
                     throw new IllegalArgumentException("文件过大，请上传小于 20MB 的文件");
                 }
 
-                // 生成唯一文件名
                 String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
                 File destFile = new File(uploadDir, fileName);
-                file.transferTo(destFile);
 
-                // 记录文件路径
-                //String filePath = "/static/uploads/" + fileName;
-                String filePath = "/uploads/" + fileName;
-                System.out.println("filePath: "+filePath);
-                Response response = new Response();
-                response.setSurveyId(surveyId);
-                response.setQuestionId(questionId);
-                response.setUserId(userId);
-                response.setIpAddress(ipAddress);
-                response.setFilePath(filePath);
-                responseService.saveFilePathToDatabase(response);
+                try {
+                    file.transferTo(destFile.toPath().toAbsolutePath());
+
+                    // 记录文件路径 - 使用相对路径
+                    String filePath = "/uploads/" + fileName;
+                    System.out.println("文件保存到: " + destFile.getAbsolutePath());
+                    System.out.println("访问路径: " + filePath);
+
+                    Response response = new Response();
+                    response.setSurveyId(surveyId);
+                    response.setQuestionId(questionId);
+                    response.setUserId(userId);
+                    response.setIpAddress(ipAddress);
+                    response.setFilePath(filePath);
+                    responseService.saveFilePathToDatabase(response);
+                } catch (IOException e) {
+                    System.err.println("文件保存失败: " + e.getMessage());
+                    throw e;
+                }
             }
         }
     }
@@ -221,11 +227,11 @@ public class ResponseController {
 
     private void processFormData(Map<String, String> formData, int surveyId, int userId, String ipAddress, boolean isSaveAction) throws Exception {
         // 调试输出开始
-        System.out.println("=== 完整的formData内容 ===");
-        for (Map.Entry<String, String> entry : formData.entrySet()) {
-            System.out.println(entry.getKey() + " = " + entry.getValue());
-        }
-        System.out.println("=======================");
+        //System.out.println("=== 完整的formData内容 ===");
+        //for (Map.Entry<String, String> entry : formData.entrySet()) {
+        //    System.out.println(entry.getKey() + " = " + entry.getValue());
+        //}
+        //System.out.println("=======================");
         // 调试输出结束
         for (Map.Entry<String, String> entry : formData.entrySet()) {
             String paramName = entry.getKey();
@@ -239,6 +245,7 @@ public class ResponseController {
                 processOpenAnswer(paramName, paramValue);
             } else if (paramName.startsWith("existing_files_")) {
                 System.out.println("到existing_files_了");
+                System.out.println("existing_files_ ——————"+paramValue);
                 // 处理文件上传题中的已有文件
                 int questionId = Integer.parseInt(paramName.split("_")[2]);
                 processExistingFiles(questionId, paramValue);
@@ -267,6 +274,7 @@ public class ResponseController {
         response.setQuestionId(questionId);
         response.setOptionId(optionId);
         response.setRowId(0);
+        response.setIsValid(1);
         response.setColumnId(0);
         response.setResponseData(paramValue);
         response.setUserId(userId);
@@ -296,7 +304,7 @@ public class ResponseController {
             response.setOptionId(0);
             response.setResponseData(answer);
         }
-
+        response.setIsValid(1);
         response.setRowId(0);
         response.setColumnId(0);
         response.setUserId(userId);
@@ -307,7 +315,7 @@ public class ResponseController {
 
     private void saveMatrixResponse(int surveyId, int questionId, String rowOptionId, String columnOptionId, 
                                   String ipAddress, int userId, boolean isSaveAction){
-        System.out.println("行列Id分别如下："+rowOptionId+" "+columnOptionId);
+        //System.out.println("行列Id分别如下："+rowOptionId+" "+columnOptionId);
 
         Response response = new Response();
         response.setSurveyId(surveyId);
@@ -316,6 +324,7 @@ public class ResponseController {
         response.setColumnId(Integer.parseInt(columnOptionId));
         response.setResponseData("");
         response.setOptionId(0);
+        response.setIsValid(1);
         response.setUserId(userId);
         response.setIpAddress(ipAddress);
         response.setCreatedAt(new Timestamp(System.currentTimeMillis()));
@@ -416,13 +425,15 @@ public class ResponseController {
 
             // 获取该问题的所有文件记录
             List<Response> allFileResponses = responseService.getExistingFileResponses(questionId);
-
             System.out.println("validFileId为："+validFileIds);
             // 将不在validFileIds中的记录设置为无效
+            System.out.print("现存文件id为： ---");
             for (Response response : allFileResponses) {
+                System.out.print(" "+response.getResponseId());
                 if (!validFileIds.contains(response.getResponseId())) {
+                    System.out.println("给无效文件设置isValid为0");
                     response.setIsValid(0);
-                    responseService.updateResponse(response);
+                    responseService.updateFileValid(response);
                 }
             }
         }

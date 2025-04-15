@@ -9,7 +9,7 @@
     </select>
 
     <!-- 批量插入答卷 -->
-    <insert id="saveResponses">
+    <insert id="saveResponses" parameterType="Response">
         INSERT INTO responses (survey_id, question_id, option_id, row_id, column_id, user_id, ip_address, response_data, created_at)
         VALUES
         <foreach collection="responses" item="response" separator=",">
@@ -19,25 +19,30 @@
     </insert>
 
     <!-- 保存文件路径 -->
-    <insert id="saveFilePathToDatabase">
+    <insert id="saveFilePathToDatabase" parameterType="Response">
         INSERT INTO responses (survey_id, question_id, user_id, file_path, created_at, is_valid, ip_address)
         VALUES (#{surveyId}, #{questionId}, #{userId}, #{filePath}, NOW(), 1, #{ipAddress})
     </insert>
 
     <!-- 使答卷无效 -->
-    <update id="resetIsValidForResponses">
+    <update id="resetIsValidForResponses" parameterType="Response">
         UPDATE responses SET is_valid = 0 WHERE user_id = #{userId} AND survey_id = #{surveyId}
     </update>
 
     <!-- 更新答卷数据 -->
-    <update id="updateResponseData">
+    <update id="updateResponseData" parameterType="Response">
         UPDATE responses SET response_data = #{responseData}, is_valid = #{isValid} WHERE option_id = #{optionId}
     </update>
 
+    <!-- 更新文件是否有效 -->
+    <update id="updateFileValid" parameterType="Response">
+        UPDATE responses SET is_valid = #{isValid} WHERE response_id = #{responseId}
+    </update>
+
     <!-- 更新答卷记录 -->
-    <update id="updateResponse">
+    <update id="updateResponse" parameterType="Response">
         UPDATE responses
-        SET response_data = #{responseData}, ip_address = #{ipAddress}, created_at = #{createdAt}, is_valid = 1
+        SET response_data = #{responseData}, ip_address = #{ipAddress}, created_at = #{createdAt}, is_valid = #{isValid}
         WHERE user_id = #{userId} AND survey_id = #{surveyId} AND question_id = #{questionId}
           AND option_id = #{optionId} AND row_id = #{rowId} AND column_id = #{columnId}
     </update>
@@ -107,7 +112,7 @@
     </select>
 
     <!-- 重置指定用户的响应记录的有效性，但排除指定的记录ID -->
-    <update id="resetIsValidForResponsesExcludingIds">
+    <update id="resetIsValidForResponsesExcludingIds" parameterType="Response">
         UPDATE responses
         SET is_valid = 0
         WHERE user_id = #{userId}

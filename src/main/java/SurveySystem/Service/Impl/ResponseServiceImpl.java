@@ -38,6 +38,11 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
+    public void updateFileValid(Response response) {
+        responseMapper.updateFileValid(response);
+    }
+
+    @Override
     public void updateResponseData(Response response) {
         responseMapper.updateResponseData(response);
     }
