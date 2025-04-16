@@ -8,25 +8,27 @@
 <!--        VALUES (#{name}, #{username}, #{password}, #{salt})-->
 <!--    </insert>-->
     <!-- 注册用户 -->
-    <insert id="registerUser" parameterType="User">
-        INSERT INTO Users (name, username, password, salt
-        <if test="departmentId != null and departmentId != 0">
-            , department_id
-        </if>
-        )
-        VALUES (#{name}, #{username}, #{password}, #{salt}
-        <if test="departmentId != null and departmentId != 0">
-            , #{departmentId}
-        </if>
+    <insert id="registerUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO Users (name, username, password, salt, department_id)
+        VALUES (
+        #{name},
+        #{username},
+        #{password},
+        #{salt},
+        <!-- 如果 departmentId 为空或 0，则默认赋值为 1，否则使用传入的 departmentId -->
+        <choose>
+            <when test="departmentId == null or departmentId == 0">1</when>
+            <otherwise>#{departmentId}</otherwise>
+        </choose>
         )
     </insert>
 
-    <!-- 批量插入用户 -->
-    <insert id="batchInsertUsers" parameterType="java.util.List">
-        INSERT INTO Users(name,username,password,salt,department_id)
+    <!-- 批量插入用户，并返回自增主键 userId -->
+    <insert id="batchInsertUsers" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO Users(name, username, password, salt, department_id)
         VALUES
         <foreach collection="list" item="user" separator=",">
-            (#{user.name},#{user.username},#{user.password},#{user.salt},#{user.departmentId})
+            (#{user.name}, #{user.username}, #{user.password}, #{user.salt}, #{user.departmentId})
         </foreach>
     </insert>
 

@@ -1,6 +1,7 @@
 package SurveySystem.Service.Impl;
 
 import SurveySystem.Mapper.UserSurveyMapper;
+import SurveySystem.Model.DepartmentSurvey;
 import SurveySystem.Model.User;
 import SurveySystem.Model.UserSurvey;
 import SurveySystem.Service.UserSurveyService;
@@ -40,8 +41,13 @@ public class UserSurveyServiceImpl implements UserSurveyService {
     }
 
     @Override
-    public boolean assignSurveyToUser(UserSurvey userSurvey) {
-        return userSurveyMapper.assignSurveyToUser(userSurvey);
+    public boolean assignSurveysToUser(int userId,List<DepartmentSurvey> departmentSurveys) {
+        return userSurveyMapper.assignSurveysToUser(userId,departmentSurveys);
+    }
+
+    @Override
+    public boolean assignSurveysToUsers(List<User> users, List<DepartmentSurvey> departmentSurveys) {
+        return userSurveyMapper.assignSurveysToUsers(users,departmentSurveys);
     }
 
     @Override

@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface UserService {
-    boolean registerUser(User user); // 注册用户
+    int registerUser(User user); // 注册用户
     // UserMapper.java
     int batchInsertUsers(List<User> userList);
     User getUserByUserId(int id);

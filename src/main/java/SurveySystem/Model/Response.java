@@ -25,4 +25,5 @@ public class Response {
     private int isValid;
     private String status;
     private String filePath;
+    private int sortOrder;
 }

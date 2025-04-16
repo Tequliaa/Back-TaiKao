@@ -68,6 +68,27 @@
         </foreach>
     </insert>
 
+
+    <!-- 为用户分配问卷 -->
+    <insert id="assignSurveysToUser">
+        INSERT INTO user_survey (user_id, survey_id)
+        VALUES
+        <foreach collection="departmentSurveys" item="survey" separator=",">
+            (#{userId}, #{survey.surveyId})
+        </foreach>
+    </insert>
+
+    <!-- 为用户分配问卷 -->
+    <insert id="assignSurveysToUsers">
+        INSERT IGNORE INTO user_survey (user_id, survey_id)
+        VALUES
+        <foreach collection="users" item="user" separator=",">
+            <foreach collection="departmentSurveys" item="survey" separator=",">
+                (#{user.id}, #{survey.surveyId})
+            </foreach>
+        </foreach>
+    </insert>
+
     <!-- 新增用户问卷记录 -->
     <insert id="addUserSurvey">
         INSERT INTO user_survey (user_id, survey_id, status)

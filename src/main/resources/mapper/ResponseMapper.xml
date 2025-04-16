@@ -42,7 +42,8 @@
     <!-- 更新答卷记录 -->
     <update id="updateResponse" parameterType="Response">
         UPDATE responses
-        SET response_data = #{responseData}, ip_address = #{ipAddress}, created_at = #{createdAt}, is_valid = #{isValid}
+        SET response_data = #{responseData}, ip_address = #{ipAddress}, created_at = #{createdAt},
+            is_valid = #{isValid},sort_order=#{sortOrder}
         WHERE user_id = #{userId} AND survey_id = #{surveyId} AND question_id = #{questionId}
           AND option_id = #{optionId} AND row_id = #{rowId} AND column_id = #{columnId}
     </update>

@@ -61,7 +61,8 @@ public class QuestionController {
 
     @PostMapping("/add")
     public Result<Void> createQuestion(@RequestBody Question question) {
-        int questionId = questionService.addQuestionAndReturnId(question);
+        questionService.addQuestionAndReturnId(question);
+        int questionId =question.getQuestionId();
 
         // Handle open/skip options if needed
         if (question.getIsOpen() == 1) {

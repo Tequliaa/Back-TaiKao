@@ -258,19 +258,26 @@ public class ResponseController {
 
 
     private void processFormData(Map<String, String> formData, int surveyId, int userId, String ipAddress, boolean isSaveAction) throws Exception {
-        // 调试输出开始
-        //System.out.println("=== 完整的formData内容 ===");
-        //for (Map.Entry<String, String> entry : formData.entrySet()) {
-        //    System.out.println(entry.getKey() + " = " + entry.getValue());
-        //}
-        //System.out.println("=======================");
+         //调试输出开始
+        System.out.println("=== 完整的formData内容 ===");
+        for (Map.Entry<String, String> entry : formData.entrySet()) {
+            System.out.println(entry.getKey() + " = " + entry.getValue());
+        }
+        System.out.println("=======================");
         // 调试输出结束
         for (Map.Entry<String, String> entry : formData.entrySet()) {
             String paramName = entry.getKey();
             String paramValue = entry.getValue();
             if (paramName.startsWith("question_")) {
                 int questionId = Integer.parseInt(paramName.split("_")[1]);
-                processQuestionAnswer(paramName,paramValue, surveyId, questionId, ipAddress, userId, isSaveAction);
+                Question question=questionService.getQuestionById(questionId);
+                if ("排序".equals(question.getType())) {
+                    //System.out.println("处理排序题");
+                    processSortAnswer(paramName, paramValue, surveyId, questionId, ipAddress, userId);
+                }
+                else{
+                    processQuestionAnswer(paramName,paramValue, surveyId, questionId, ipAddress, userId, isSaveAction);
+                }
             } else if (paramName.startsWith("rating_")) {
                 processRatingAnswer(paramName, paramValue, surveyId, ipAddress, userId);
             } else if (paramName.startsWith("open_answer_")) {
@@ -283,6 +290,31 @@ public class ResponseController {
                 processExistingFiles(questionId, paramValue);
             }
         }
+    }
+
+    //处理排序题
+    private void processSortAnswer(String paramName, String paramValue, int surveyId, int questionId,
+                                   String ipAddress, int userId) throws Exception {
+        // 从参数名中提取选项ID
+        int optionId = Integer.parseInt(paramName.split("_")[3]);
+        System.out.println("optionId: "+optionId);
+        // 从参数值中获取排序位置
+        int sortOrder = Integer.parseInt(paramValue);
+        System.out.println("sortOrder: "+sortOrder);
+        Response response = new Response();
+        response.setSurveyId(surveyId);
+        response.setQuestionId(questionId);
+        response.setOptionId(optionId);
+        response.setSortOrder(sortOrder);  // 设置排序位置
+        response.setResponseData("");
+        response.setIsValid(1);
+        response.setRowId(0);
+        response.setColumnId(0);
+        response.setUserId(userId);
+        response.setIpAddress(ipAddress);
+        response.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+
+        responseService.updateResponse(response);
     }
 
     private void processQuestionAnswer(String paramName,String paramValue, int surveyId, int questionId,
@@ -401,7 +433,8 @@ public class ResponseController {
                             initialResponses.add(responseRecord);
                         }
                     }
-                } else if ("单选".equals(questionType) || "多选".equals(questionType) || "评分题".equals(questionType)) {
+                } else if ("单选".equals(questionType) || "多选".equals(questionType)
+                        || "评分题".equals(questionType)||"排序".equals(questionType)) {
                     List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
                     for (Option option : options) {
                         Response responseRecord = createInitialResponse(surveyId, question.getQuestionId(), 

@@ -1,5 +1,6 @@
 package SurveySystem.Service;
 
+import SurveySystem.Model.DepartmentSurvey;
 import SurveySystem.Model.User;
 import SurveySystem.Model.UserSurvey;
 
@@ -13,7 +14,8 @@ public interface UserSurveyService {
     List<UserSurvey> getUserDepartmentInfoBySurveyId(int surveyId);
     UserSurvey getUserSurveyByUserIdAndSurveyId(int userId, int surveyId);
 
-    boolean assignSurveyToUser(UserSurvey userSurvey);
+    boolean assignSurveysToUser(int userId,List<DepartmentSurvey> departmentSurveys);
+    boolean assignSurveysToUsers(List<User> users,List<DepartmentSurvey> departmentSurveys);
     boolean assignSurveyToDepartment(List<User> users, UserSurvey userSurvey) ;
 
     /**

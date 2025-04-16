@@ -18,7 +18,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean registerUser(User user) {
+    public int registerUser(User user) {
         return userMapper.registerUser(user);
     }
 

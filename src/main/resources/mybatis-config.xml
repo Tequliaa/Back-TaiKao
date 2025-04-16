@@ -30,6 +30,7 @@
         <mapper resource="mapper/OptionMapper.xml"/>
         <mapper resource="mapper/UserSurveyMapper.xml"/>
         <mapper resource="mapper/ResponseMapper.xml"/>
+        <mapper resource="mapper/DepartmentSurveyMapper.xml"/>
 <!--        <mapper class="mapper.UserMapper"/>-->
     </mappers>
 </configuration>
