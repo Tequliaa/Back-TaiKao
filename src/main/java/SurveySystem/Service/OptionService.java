@@ -3,6 +3,7 @@ package SurveySystem.Service;
 import SurveySystem.Model.Option;
 
 import java.util.List;
+import java.util.Map;
 
 public interface OptionService {
     boolean addOption(Option option);
@@ -12,6 +13,7 @@ public interface OptionService {
     List<Option> getRowOptionsByQuestionId(int questionId);
     List<Option> getColumnOptionsByQuestionId(int questionId);
     List<Option> getOptionsWithCheckCountByQuestionId(int questionId,int departmentId);
+    List<Map<String, Object>> getMatrixCellCheckCount(int questionId, int departmentId);
     List<Option> getOptionsByQuestionId(int questionId);
     List<Option> getAllOptions();
     List<Option> getOptionsByPage(int page, int pageSize , int questionId);

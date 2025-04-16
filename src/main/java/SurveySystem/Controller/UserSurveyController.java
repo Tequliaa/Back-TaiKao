@@ -46,11 +46,11 @@ public class UserSurveyController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "12") int pageSize) throws SQLException {
 
-        int totalCount = userSurveyService.getUserInfoCount(surveyId, departmentId);
+        int total = userSurveyService.getUserInfoCount(surveyId, departmentId);
         List<UserSurvey> userSurveys = userSurveyService.getUserInfoBySurveyId(surveyId, departmentId, pageNum, pageSize);
 
         Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("totalCount", totalCount);
+        resultMap.put("total", total);
         resultMap.put("userSurveys", userSurveys);
 
         return Result.success(resultMap);

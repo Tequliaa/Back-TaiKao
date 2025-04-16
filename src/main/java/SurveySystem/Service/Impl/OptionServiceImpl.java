@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+
 @Service
 public class OptionServiceImpl implements OptionService {
     private final OptionMapper optionMapper;
@@ -49,6 +51,11 @@ public class OptionServiceImpl implements OptionService {
     @Override
     public List<Option> getOptionsWithCheckCountByQuestionId(int questionId, int departmentId) {
         return optionMapper.getOptionsWithCheckCountByQuestionId(questionId,departmentId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getMatrixCellCheckCount(int questionId, int departmentId) {
+        return optionMapper.getMatrixCellCheckCount(questionId,departmentId);
     }
 
     @Override

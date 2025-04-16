@@ -41,6 +41,7 @@
         SELECT * FROM Options WHERE option_id = #{optionId}
     </select>
 
+
     <select id="getOptionsWithCheckCountByQuestionId" resultMap="optionResultMap">
         SELECT o.*,
                (SELECT COUNT(*)
@@ -52,6 +53,26 @@
         FROM Options o
         WHERE o.question_id = #{questionId}
         ORDER BY o.sort_key
+    </select>
+
+    <select id="getMatrixCellCheckCount" resultType="java.util.Map">
+        SELECT
+            r.row_id AS rowOptionId,
+            r.column_id AS colOptionId,
+            COUNT(*) AS checkCount
+        FROM
+            Responses r
+                JOIN Users u ON r.user_id = u.id
+        WHERE
+            r.question_id = #{questionId}
+          AND r.option_id = 0  -- 选项ID为0
+          AND (r.row_id IS NOT NULL OR r.column_id IS NOT NULL)  -- 关键修改：确保是矩阵题
+          AND r.is_valid = 1
+        <if test="departmentId != null and departmentId != 0">
+            AND u.department_id = #{departmentId}
+        </if>
+        GROUP BY
+            r.row_id, r.column_id
     </select>
 
     <select id="getOptionsByQuestionId" resultMap="optionResultMap" parameterType="int">
