@@ -42,17 +42,43 @@
     </select>
 
 
+    <!-- OptionMapper.xml -->
     <select id="getOptionsWithCheckCountByQuestionId" resultMap="optionResultMap">
         SELECT o.*,
-               (SELECT COUNT(*)
-                FROM Responses r
-                         JOIN Users u ON r.user_id = u.id
-                WHERE r.option_id = o.option_id
-                  AND r.is_valid = 1
-                  AND (u.department_id = #{departmentId} OR #{departmentId} = 0)) AS count
+               CASE
+                   WHEN q.type = '排序' THEN (
+                       SELECT AVG(r.sort_order)
+                       FROM Responses r
+                                JOIN Users u ON r.user_id = u.id
+                       WHERE r.option_id = o.option_id
+                         AND r.is_valid = 1
+                         AND (u.department_id = #{departmentId} OR #{departmentId} = 0)
+                   )
+                   WHEN q.type = '评分题' THEN (
+                       SELECT AVG(CAST(r.response_data AS DECIMAL))
+                       FROM Responses r
+                                JOIN Users u ON r.user_id = u.id
+                       WHERE r.option_id = o.option_id
+                         AND r.is_valid = 1
+                         AND (u.department_id = #{departmentId} OR #{departmentId} = 0)
+                   )
+                   ELSE (
+                       SELECT COUNT(*)
+                       FROM Responses r
+                                JOIN Users u ON r.user_id = u.id
+                       WHERE r.option_id = o.option_id
+                         AND r.is_valid = 1
+                         AND (u.department_id = #{departmentId} OR #{departmentId} = 0)
+                   )
+                   END AS count
         FROM Options o
+            INNER JOIN Questions q ON o.question_id = q.question_id
         WHERE o.question_id = #{questionId}
-        ORDER BY o.sort_key
+        ORDER BY
+            CASE
+            WHEN q.type = '排序' THEN count
+            ELSE o.sort_key
+        END
     </select>
 
     <select id="getMatrixCellCheckCount" resultType="java.util.Map">

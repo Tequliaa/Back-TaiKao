@@ -59,6 +59,16 @@ public class OptionServiceImpl implements OptionService {
     }
 
     @Override
+    public List<Map<String, Object>> getSortStatistics(int questionId, int departmentId) {
+        return optionMapper.getSortStatistics(questionId, departmentId);
+    }
+
+    @Override
+    public List<Map<String, Object>> getSortPositionFrequencies(int questionId, int departmentId) {
+        return optionMapper.getSortPositionFrequencies(questionId, departmentId);
+    }
+
+    @Override
     public List<Option> getOptionsByQuestionId(int questionId) {
         return optionMapper.getOptionsByQuestionId(questionId);
     }
