@@ -54,7 +54,7 @@
         </where>
     </select>
 
-    <insert id="createSurvey">
+    <insert id="createSurvey"  useGeneratedKeys="true" keyProperty="surveyId" keyColumn="survey_id">
         INSERT INTO surveys (name, description, allow_view, created_by, created_at)
         VALUES (#{name}, #{description}, #{allowView}, #{createdBy}, NOW())
     </insert>
