@@ -16,6 +16,8 @@
         <result property="categoryId" column="CategoryId"/>
         <result property="surveyName" column="surveyName"/>
         <result property="categoryName" column="categoryName"/>
+        <result property="maxSelections" column="maxSelections"/>
+        <result property="minSelections" column="minSelections"/>
     </resultMap>
 
     <sql id="baseQuery">
@@ -27,6 +29,8 @@
             q.is_required AS isRequired,
             q.is_open AS isOpen,
             q.display_type AS displayType,
+            q.max_selections AS maxSelections,
+            q.min_selections AS minSelections,
             q.is_skip AS isSkip,
             q.created_at AS createdAt,
             q.updated_at AS updatedAt,
@@ -62,9 +66,9 @@
 
     <insert id="addQuestionAndReturnId" parameterType="Question" useGeneratedKeys="true" keyProperty="questionId" keyColumn="question_id">
         INSERT INTO questions
-        (description, type, is_required, is_open, primary_category_id, survey_id, is_skip)
+        (description, type, is_required, is_open, display_type,primary_category_id, survey_id, is_skip,max_selections,min_selections)
         VALUES
-            (#{description}, #{type}, #{isRequired}, #{isOpen}, #{categoryId}, #{surveyId}, #{isSkip})
+            (#{description}, #{type}, #{isRequired},#{isOpen},#{displayType}, #{categoryId}, #{surveyId}, #{isSkip},#{maxSelections},#{minSelections})
     </insert>
 
     <update id="updateQuestion" parameterType="Question">
@@ -76,6 +80,9 @@
             is_open = #{isOpen},
             is_skip = #{isSkip},
             survey_id = #{surveyId},
+            max_selections =#{maxSelections},
+            min_selections =#{minSelections},
+            display_type =#{displayType},
             primary_category_id = #{categoryId}
         WHERE question_id = #{questionId}
     </update>

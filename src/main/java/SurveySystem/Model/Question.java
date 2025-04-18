@@ -31,4 +31,6 @@ public class Question {
     private int isSkip;
     private int isRequired;
     private int isOpen;
+    private int maxSelections;
+    private int minSelections;
 }

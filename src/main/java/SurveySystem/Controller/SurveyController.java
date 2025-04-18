@@ -70,7 +70,7 @@ public class SurveyController {
 
 
     @PostMapping("/saveBuild")
-    public Result<Void> saveSurvey(@RequestBody SurveyDto dto) {
+    public Result<Integer> saveSurvey(@RequestBody SurveyDto dto) {
         System.out.println("survey: "+ dto.getSurvey());
 
         Survey survey = dto.getSurvey();
@@ -81,12 +81,12 @@ public class SurveyController {
         }else{
             surveyService.createSurvey(survey);
             System.out.println("surveyId: "+survey.getSurveyId());
-            for(Question question:questions){
-                System.out.println(question);
-            }
             handleSurveyContent(questions,survey);
         }
-        return Result.success();
+        for(Question question:questions){
+            System.out.println(question);
+        }
+        return Result.success(survey.getSurveyId());
     }
 
 
@@ -94,6 +94,9 @@ public class SurveyController {
     public Result<Void> updateBuildSurvey(@RequestBody SurveyDto dto) {
         Survey survey = dto.getSurvey();
         List<Question> questions=dto.getQuestions();
+        for(Question question:questions){
+            System.out.println(question);
+        }
         surveyService.updateSurvey(survey);
         handleSurveyContent(questions,survey);
         return Result.success();
@@ -103,11 +106,25 @@ public class SurveyController {
         System.out.println("handleSurveyContent survey: "+survey);
         for(Question question:questions){
 
+            //问题存在，做得是更新操作
             if(question.getQuestionId()!=0){
                 question.setSurveyId(survey.getSurveyId());
                 int questionId = question.getQuestionId();
+                int dataBaseIsSKip=questionService.getQuestionById(questionId).getIsSkip();
+                int dataBaseIsOpen=questionService.getQuestionById(questionId).getIsOpen();
                 questionService.updateQuestion(question);
+                if (question.getIsOpen() == 1&&dataBaseIsOpen==0) {
+                    createOpenOption(questionId);
+                }
+                if (question.getIsSkip() == 1&&dataBaseIsSKip==0) {
+                    createSkipOption(questionId);
+                }
                 for(Option option:question.getOptions()){
+                    String questionType =question.getType();
+                    if(questionType.equals("单选")||questionType.equals("多选")||questionType.equals("评分题")
+                    ||questionType.equals("排序")){
+                        option.setType("行选项");
+                    }
                     if(option.getOptionId()!=0){
                         option.setQuestionId(questionId);
                         optionService.updateOption(option);
@@ -115,15 +132,32 @@ public class SurveyController {
                         optionService.addOption(option);
                     }
                 }
-            }else {
+            }
+            //问题不存在，做的是新建问题
+            else {
                 System.out.println("handleSurveyContent");
                 question.setSurveyId(survey.getSurveyId());
                 questionService.addQuestionAndReturnId(question);
+                // Handle open/skip options if needed
                 int questionId =question.getQuestionId();
+                //创建开放答案
+                if (question.getIsOpen() == 1) {
+                    createOpenOption(questionId);
+                }
+                //创建跳转选项
+                if (question.getIsSkip() == 1) {
+                    createSkipOption(questionId);
+                }
+
                 System.out.println("handleSurveyContent questionId: "+questionId);
                 System.out.println("handleSurveyContent surveyId: "+survey.getSurveyId());
 
                 for(Option option:question.getOptions()){
+                    String questionType =question.getType();
+                    if(questionType.equals("单选")||questionType.equals("多选")||questionType.equals("评分题")
+                            ||questionType.equals("排序")){
+                        option.setType("行选项");
+                    }
                     option.setQuestionId(questionId);
                     if(option.getOptionId()!=0){
                         optionService.updateOption(option);
@@ -133,6 +167,28 @@ public class SurveyController {
                 }
             }
         }
+    }
+
+    private void createOpenOption(int questionId) {
+        Option openOption = new Option();
+        openOption.setQuestionId(questionId);
+        openOption.setType("行选项");
+        openOption.setSortKey("100");
+        openOption.setDescription("其他（请填写）");
+        openOption.setIsOpenOption(1);
+        openOption.setIsSkip(0);
+        optionService.addOption(openOption);
+    }
+
+    private void createSkipOption(int questionId) {
+        Option skipOption = new Option();
+        skipOption.setQuestionId(questionId);
+        skipOption.setType("行选项");
+        skipOption.setSortKey("100");
+        skipOption.setDescription("这是跳转选项");
+        skipOption.setIsOpenOption(0);
+        skipOption.setIsSkip(1);
+        optionService.addOption(skipOption);
     }
 
     @PostMapping("/add")
