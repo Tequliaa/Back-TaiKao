@@ -177,8 +177,10 @@ public class ResponseController {
             // 初始化响应记录
             initializeResponses(surveyId, userId, ipAddress);
 
-            // 处理表单数据
-            processFormData(formData, surveyId, userId, ipAddress, isSaveAction);
+            if(!formData.isEmpty()&&formData!=null){
+                // 处理表单数据
+                processFormData(formData, surveyId, userId, ipAddress, isSaveAction);
+            }
 
             // 处理文件上传
             if (fileMap != null && !fileMap.isEmpty()) {
@@ -452,8 +454,11 @@ public class ResponseController {
                     initialResponses.add(responseRecord);
                 }
             }
-            
-            responseService.saveResponses(initialResponses);
+            //确保有数据时再初始化，不然数据库报错了
+            if(!initialResponses.isEmpty()&&initialResponses!=null){
+                responseService.saveResponses(initialResponses);
+            }
+
         }
         else{
             // 获取所有已有文件的 responseId

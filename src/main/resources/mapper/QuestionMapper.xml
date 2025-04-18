@@ -18,6 +18,8 @@
         <result property="categoryName" column="categoryName"/>
         <result property="maxSelections" column="maxSelections"/>
         <result property="minSelections" column="minSelections"/>
+        <result property="instructions" column="instructions"/>
+        <result property="sortType" column="sortType"/>
     </resultMap>
 
     <sql id="baseQuery">
@@ -32,6 +34,8 @@
             q.max_selections AS maxSelections,
             q.min_selections AS minSelections,
             q.is_skip AS isSkip,
+            q.sort_type AS sortType,
+            q.instructions AS instructions,
             q.created_at AS createdAt,
             q.updated_at AS updatedAt,
             q.primary_category_id AS CategoryId,
@@ -66,9 +70,9 @@
 
     <insert id="addQuestionAndReturnId" parameterType="Question" useGeneratedKeys="true" keyProperty="questionId" keyColumn="question_id">
         INSERT INTO questions
-        (description, type, is_required, is_open, display_type,primary_category_id, survey_id, is_skip,max_selections,min_selections)
+        (description, type, is_required, is_open, display_type,sort_type,instructions,primary_category_id, survey_id, is_skip,max_selections,min_selections)
         VALUES
-            (#{description}, #{type}, #{isRequired},#{isOpen},#{displayType}, #{categoryId}, #{surveyId}, #{isSkip},#{maxSelections},#{minSelections})
+            (#{description}, #{type}, #{isRequired},#{isOpen},#{displayType},#{sortType},#{instructions}, #{categoryId}, #{surveyId}, #{isSkip},#{maxSelections},#{minSelections})
     </insert>
 
     <update id="updateQuestion" parameterType="Question">
@@ -79,6 +83,8 @@
             is_required = #{isRequired},
             is_open = #{isOpen},
             is_skip = #{isSkip},
+            sort_type = #{sortType},
+            instructions = #{instructions},
             survey_id = #{surveyId},
             max_selections =#{maxSelections},
             min_selections =#{minSelections},

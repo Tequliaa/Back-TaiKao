@@ -62,7 +62,7 @@
     <update id="updateSurvey">
         UPDATE surveys
         SET name = #{name}, description = #{description}, allow_view = #{allowView},
-            updated_by = #{updatedBy}, updated_at = NOW()
+            updated_by = #{updatedBy}, updated_at = NOW(),status = #{status}
         WHERE survey_id = #{surveyId}
     </update>
 

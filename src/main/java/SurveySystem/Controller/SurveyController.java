@@ -97,6 +97,7 @@ public class SurveyController {
         for(Question question:questions){
             System.out.println(question);
         }
+        survey.setStatus("草稿");
         surveyService.updateSurvey(survey);
         handleSurveyContent(questions,survey);
         return Result.success();
@@ -199,6 +200,7 @@ public class SurveyController {
 
     @PutMapping("/update")
     public Result<Void> updateSurvey(@RequestBody Survey survey) {
+        survey.setStatus("草稿");
         surveyService.updateSurvey(survey);
         return Result.success();
     }

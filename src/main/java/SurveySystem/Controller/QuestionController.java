@@ -49,6 +49,10 @@ public class QuestionController {
         questions.forEach(question ->
                 question.setOptions(optionService.getOptionsByQuestionId(question.getQuestionId()))
         );
+        System.out.println("question/getAll");
+        for(Question question:questions){
+            System.out.println(question);
+        }
         return Result.success(questions);
     }
 

@@ -33,4 +33,6 @@ public class Question {
     private int isOpen;
     private int maxSelections;
     private int minSelections;
+    private String instructions;
+    private String sortType;
 }
