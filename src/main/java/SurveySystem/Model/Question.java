@@ -35,4 +35,5 @@ public class Question {
     private int minSelections;
     private String instructions;
     private String sortType;
+    private String sortKey;
 }

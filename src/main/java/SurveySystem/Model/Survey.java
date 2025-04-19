@@ -24,4 +24,6 @@ public class Survey {
     private String updatedByName;
     private Timestamp updatedAt;
     private String status;
+    //问卷内问题 是否按分类排序
+    private int isCategory;
 }

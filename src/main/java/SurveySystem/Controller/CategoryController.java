@@ -58,6 +58,10 @@ public class CategoryController {
     public Result<List<Category>> getAllCategories() {
         System.out.println("getAllCategories");
         List<Category> categories = categoryService.getAllCategories();
+        //System.out.println("categories: ");
+        //for(Category category:categories){
+        //    System.out.println(category);
+        //}
         return Result.success(categories);
     }
 

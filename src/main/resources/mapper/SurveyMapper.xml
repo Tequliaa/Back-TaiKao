@@ -41,6 +41,7 @@
         <!-- 其他survey字段... -->
         <!-- 关联字段 -->
         <result property="createdByName" column="createdByName"/>
+        <result property="isCategory" column="is_category"/>
     </resultMap>
 
     <!-- 修改后的总数统计查询 -->
@@ -55,13 +56,13 @@
     </select>
 
     <insert id="createSurvey"  useGeneratedKeys="true" keyProperty="surveyId" keyColumn="survey_id">
-        INSERT INTO surveys (name, description, allow_view, created_by, created_at)
-        VALUES (#{name}, #{description}, #{allowView}, #{createdBy}, NOW())
+        INSERT INTO surveys (name, description, allow_view,is_category, created_by, created_at)
+        VALUES (#{name}, #{description}, #{allowView},#{isCategory}, #{createdBy}, NOW())
     </insert>
 
     <update id="updateSurvey">
         UPDATE surveys
-        SET name = #{name}, description = #{description}, allow_view = #{allowView},
+        SET name = #{name}, description = #{description}, allow_view = #{allowView},is_category=#{isCategory},
             updated_by = #{updatedBy}, updated_at = NOW(),status = #{status}
         WHERE survey_id = #{surveyId}
     </update>

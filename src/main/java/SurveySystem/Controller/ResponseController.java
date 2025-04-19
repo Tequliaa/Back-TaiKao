@@ -81,11 +81,13 @@ public class ResponseController {
                 List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
                 question.setOptions(options);
             }
-
+            Survey survey = surveyService.getSurveyById(surveyId);
             Map<String, Object> resultMap = new HashMap<>();
+
             resultMap.put("userResponses", userResponses);
             resultMap.put("userSurvey", userSurvey);
             resultMap.put("questions", questions);
+            resultMap.put("survey",survey);
             resultMap.put("questionIndexMap", questionIndexMap);
 
             return Result.success(resultMap);

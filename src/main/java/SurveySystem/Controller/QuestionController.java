@@ -15,10 +15,13 @@ public class QuestionController {
 
     private final QuestionService questionService;
     private final OptionService optionService;
+    private final SurveyService surveyService;
 
-    public QuestionController(QuestionService questionService, OptionService optionService) {
+    public QuestionController(QuestionService questionService, OptionService optionService,
+                              SurveyService surveyService) {
         this.questionService = questionService;
         this.optionService = optionService;
+        this.surveyService = surveyService;
     }
 
     @GetMapping("/list")
@@ -43,8 +46,22 @@ public class QuestionController {
         return Result.success(resultMap);
     }
 
+    //@GetMapping("/getAll")
+    //public Result<List<Question>> getAllQuestions(@RequestParam(defaultValue = "0") int surveyId) {
+    //    List<Question> questions = questionService.getAllQuestions(surveyId);
+    //    questions.forEach(question ->
+    //            question.setOptions(optionService.getOptionsByQuestionId(question.getQuestionId()))
+    //    );
+    //    System.out.println("question/getAll");
+    //    for(Question question:questions){
+    //        System.out.println(question);
+    //    }
+    //    Survey survey = surveyService.getSurveyById(surveyId);
+    //
+    //    return Result.success(questions);
+    //}
     @GetMapping("/getAll")
-    public Result<List<Question>> getAllQuestions(@RequestParam(defaultValue = "0") int surveyId) {
+    public Result<Map<String, Object>> getAllQuestions(@RequestParam(defaultValue = "0") int surveyId) {
         List<Question> questions = questionService.getAllQuestions(surveyId);
         questions.forEach(question ->
                 question.setOptions(optionService.getOptionsByQuestionId(question.getQuestionId()))
@@ -53,8 +70,13 @@ public class QuestionController {
         for(Question question:questions){
             System.out.println(question);
         }
-        return Result.success(questions);
+        Map<String, Object> resultMap = new HashMap<>();
+        Survey survey = surveyService.getSurveyById(surveyId);
+        resultMap.put("survey",survey);
+        resultMap.put("questions",questions);
+        return Result.success(resultMap);
     }
+
 
     @GetMapping("/getById")
     public Result<Question> getQuestionById(@RequestParam int questionId) {

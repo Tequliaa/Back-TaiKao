@@ -20,6 +20,7 @@
         <result property="minSelections" column="minSelections"/>
         <result property="instructions" column="instructions"/>
         <result property="sortType" column="sortType"/>
+        <result property="sortKey" column="sortKey"/>
     </resultMap>
 
     <sql id="baseQuery">
@@ -35,6 +36,7 @@
             q.min_selections AS minSelections,
             q.is_skip AS isSkip,
             q.sort_type AS sortType,
+            q.sort_key AS sortKey,
             q.instructions AS instructions,
             q.created_at AS createdAt,
             q.updated_at AS updatedAt,
@@ -49,7 +51,7 @@
     <select id="getAllQuestions" resultMap="questionResultMap">
         <include refid="baseQuery"/>
         <if test="surveyId != 0">
-            WHERE q.survey_id = #{surveyId}
+            WHERE q.survey_id = #{surveyId} ORDER BY q.sort_key,q.primary_category_id
         </if>
     </select>
 
@@ -60,19 +62,20 @@
 
     <select id="getQuestionsBySurveyId" resultMap="questionResultMap" parameterType="int">
         <include refid="baseQuery"/>
-        WHERE q.survey_id = #{surveyId}
+        WHERE q.survey_id = #{surveyId} ORDER BY q.sort_key,q.primary_category_id
     </select>
 
     <select id="getQuestionsByCategoryId" resultMap="questionResultMap" parameterType="int">
         <include refid="baseQuery"/>
-        WHERE q.primary_category_id = #{categoryId}
+        WHERE q.primary_category_id = #{categoryId} ORDER BY q.sort_key,q.primary_category_id
     </select>
 
     <insert id="addQuestionAndReturnId" parameterType="Question" useGeneratedKeys="true" keyProperty="questionId" keyColumn="question_id">
         INSERT INTO questions
-        (description, type, is_required, is_open, display_type,sort_type,instructions,primary_category_id, survey_id, is_skip,max_selections,min_selections)
+        (description, type, is_required, is_open, display_type,sort_type,sort_key,instructions,primary_category_id, survey_id, is_skip,max_selections,min_selections)
         VALUES
-            (#{description}, #{type}, #{isRequired},#{isOpen},#{displayType},#{sortType},#{instructions}, #{categoryId}, #{surveyId}, #{isSkip},#{maxSelections},#{minSelections})
+            (#{description}, #{type}, #{isRequired},#{isOpen},#{displayType},#{sortType},#{sortKey},
+             #{instructions}, #{categoryId}, #{surveyId}, #{isSkip},#{maxSelections},#{minSelections})
     </insert>
 
     <update id="updateQuestion" parameterType="Question">
@@ -84,6 +87,7 @@
             is_open = #{isOpen},
             is_skip = #{isSkip},
             sort_type = #{sortType},
+            sort_key = #{sortKey},
             instructions = #{instructions},
             survey_id = #{surveyId},
             max_selections =#{maxSelections},
@@ -110,7 +114,7 @@
                 AND q.description LIKE CONCAT('%', #{keyword}, '%')
             </if>
         </where>
-        LIMIT #{pageSize} OFFSET #{offset}
+        LIMIT #{pageSize} OFFSET #{offset} ORDER BY q.sort_key,q.primary_category_id
     </select>
 
     <select id="getQuestionCount" resultType="int">
