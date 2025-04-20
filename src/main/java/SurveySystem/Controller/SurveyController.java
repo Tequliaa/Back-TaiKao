@@ -57,7 +57,7 @@ public class SurveyController {
     @GetMapping("/getSurveyAndQuestionsById")
     public Result<Map<String, Object>> getSurveyById(@RequestParam int surveyId) {
         Survey survey = surveyService.getSurveyById(surveyId);
-        List<Question> questions=questionService.getAllQuestions(surveyId);
+        List<Question> questions=questionService.getQuestionsBySurveyId(surveyId);
         for(Question question:questions){
             List<Option> options= optionService.getOptionsByQuestionId(question.getQuestionId());
             question.setOptions(options);

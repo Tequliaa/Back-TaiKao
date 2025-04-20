@@ -17,8 +17,8 @@ public class CategoryServiceImpl implements CategoryService {
         this.categoryMapper = categoryMapper;
     }
     @Override
-    public List<Category> getAllCategories() {
-        return categoryMapper.getAllCategories();
+    public List<Category> getAllCategories(int userId) {
+        return categoryMapper.getAllCategories(userId);
     }
 
     @Override
@@ -27,13 +27,13 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<Category> getSubCategories(int parentId) {
-        return categoryMapper.getSubCategories(parentId);
+    public List<Category> getSubCategories(int parentId,int userId) {
+        return categoryMapper.getSubCategories(parentId,userId);
     }
 
     @Override
-    public List<Category> getParentCategories() {
-        return categoryMapper.getParentCategories();
+    public List<Category> getParentCategories(int userId) {
+        return categoryMapper.getParentCategories(userId);
     }
 
     @Override
@@ -61,19 +61,15 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryMapper.getCategoryByCategoryId(categoryId);
     }
 
-    @Override
-    public List<Category> searchCategories(String searchQuery) {
-        return categoryMapper.searchCategories(searchQuery);
-    }
 
     @Override
-    public List<Category> getCategoriesByPage(int currentPage, int pageSize, String keyword) {
+    public List<Category> getCategoriesByPage(int currentPage, int pageSize, String keyword,int userId) {
         int offset = (currentPage - 1) * pageSize;
-        return categoryMapper.getCategoriesByPage(offset,pageSize,keyword);
+        return categoryMapper.getCategoriesByPage(offset,pageSize,keyword,userId);
     }
 
     @Override
-    public int getCategoryCount(String keyword) {
-        return categoryMapper.getCategoryCount(keyword);
+    public int getCategoryCount(String keyword,int userId) {
+        return categoryMapper.getCategoryCount(keyword,userId);
     }
 }

@@ -28,12 +28,13 @@ public class QuestionController {
     public Result<Map<String, Object>> listQuestions(
             @RequestParam int pageNum,
             @RequestParam int pageSize,
+            @RequestParam int userId,
             @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") int surveyId,
             @RequestParam(defaultValue = "0") int categoryId) {
 
-        List<Question> questions = questionService.getQuestionsByPage(pageNum, pageSize, surveyId, categoryId, keyword);
-        int totalCount = questionService.getQuestionCount(surveyId, categoryId, keyword);
+        List<Question> questions = questionService.getQuestionsByPage(pageNum, pageSize, surveyId, categoryId, keyword,userId);
+        int totalCount = questionService.getQuestionCount(surveyId, categoryId, keyword,userId);
 
         // Add options to each question
         questions.forEach(question ->
@@ -46,23 +47,10 @@ public class QuestionController {
         return Result.success(resultMap);
     }
 
-    //@GetMapping("/getAll")
-    //public Result<List<Question>> getAllQuestions(@RequestParam(defaultValue = "0") int surveyId) {
-    //    List<Question> questions = questionService.getAllQuestions(surveyId);
-    //    questions.forEach(question ->
-    //            question.setOptions(optionService.getOptionsByQuestionId(question.getQuestionId()))
-    //    );
-    //    System.out.println("question/getAll");
-    //    for(Question question:questions){
-    //        System.out.println(question);
-    //    }
-    //    Survey survey = surveyService.getSurveyById(surveyId);
-    //
-    //    return Result.success(questions);
-    //}
     @GetMapping("/getAll")
-    public Result<Map<String, Object>> getAllQuestions(@RequestParam(defaultValue = "0") int surveyId) {
-        List<Question> questions = questionService.getAllQuestions(surveyId);
+    public Result<Map<String, Object>> getAllQuestions(@RequestParam(defaultValue = "0") int surveyId,
+                                                       @RequestParam int userId) {
+        List<Question> questions = questionService.getAllQuestions(surveyId,userId);
         questions.forEach(question ->
                 question.setOptions(optionService.getOptionsByQuestionId(question.getQuestionId()))
         );

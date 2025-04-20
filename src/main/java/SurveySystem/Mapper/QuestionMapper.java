@@ -7,11 +7,10 @@ import java.util.List;
 
 @Mapper
 public interface QuestionMapper {
-    List<Question> getAllQuestions(int surveyId);
+    List<Question> getAllQuestions(int surveyId,int userId);
 
     Question getQuestionById(int questionId);
     List<Question> getQuestionsBySurveyId(int surveyId);
-    List<Question> getQuestionsByCategoryId(int categoryId);
 
     int addQuestionAndReturnId(Question question);
 
@@ -19,7 +18,6 @@ public interface QuestionMapper {
 
     boolean deleteQuestion(int questionId);
 
-
-    List<Question> getQuestionsByPage(int offset, int pageSize , int surveyId , int categoryId ,String keyword);
-    int getQuestionCount(int surveyId,int categoryId,String keyword);
+    List<Question> getQuestionsByPage(int offset, int pageSize , int surveyId , int categoryId ,String keyword,int userId);
+    int getQuestionCount(int surveyId,int categoryId,String keyword,int userId);
 }

@@ -74,18 +74,18 @@ public class OptionServiceImpl implements OptionService {
     }
 
     @Override
-    public List<Option> getAllOptions() {
-        return optionMapper.getAllOptions();
+    public List<Option> getAllOptions(int userId) {
+        return optionMapper.getAllOptions(userId);
     }
 
     @Override
-    public List<Option> getOptionsByPage(int currentPage, int pageSize, int questionId) {
+    public List<Option> getOptionsByPage(int currentPage, int pageSize, int questionId,int userId) {
         int offset = (currentPage-1)*pageSize;
-        return optionMapper.getOptionsByPage(offset,pageSize,questionId);
+        return optionMapper.getOptionsByPage(offset,pageSize,questionId,userId);
     }
 
     @Override
-    public int getOptionCount(int questionId) {
-        return optionMapper.getOptionCount(questionId);
+    public int getOptionCount(int questionId,int userId) {
+        return optionMapper.getOptionCount(questionId,userId);
     }
 }

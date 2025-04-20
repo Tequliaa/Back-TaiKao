@@ -25,11 +25,12 @@ public class OptionController {
     public Result<Map<String, Object>> listOptions(
             @RequestParam int pageNum,
             @RequestParam int pageSize,
+            @RequestParam int userId,
             @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") int questionId) {
 
-        List<Option> options = optionService.getOptionsByPage(pageNum, pageSize, questionId);
-        int totalCount = optionService.getOptionCount(questionId);
+        List<Option> options = optionService.getOptionsByPage(pageNum, pageSize, questionId,userId);
+        int totalCount = optionService.getOptionCount(questionId,userId);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("options", options);
@@ -39,9 +40,10 @@ public class OptionController {
     }
 
     @GetMapping("/getAll")
-    public Result<List<Option>> getAllOptions(@RequestParam(defaultValue = "0") int questionId) {
+    public Result<List<Option>> getAllOptions(@RequestParam(defaultValue = "0") int questionId,
+                                              @RequestParam int userId) {
         List<Option> options = questionId == 0 ?
-                optionService.getAllOptions() :
+                optionService.getAllOptions(userId) :
                 optionService.getOptionsByQuestionId(questionId);
         return Result.success(options);
     }

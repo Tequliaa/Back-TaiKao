@@ -28,7 +28,7 @@ public interface OptionMapper {
      */
     List<Map<String, Object>> getSortPositionFrequencies(int questionId, int departmentId);
     List<Option> getOptionsByQuestionId(int questionId);
-    List<Option> getAllOptions();
-    List<Option> getOptionsByPage(int offset, int pageSize , int questionId);
-    int getOptionCount(int questionId);
+    List<Option> getAllOptions(int userId);
+    List<Option> getOptionsByPage(int offset, int pageSize , int questionId,int userId);
+    int getOptionCount(int questionId,int userId);
 }

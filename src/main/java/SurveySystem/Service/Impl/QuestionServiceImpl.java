@@ -19,8 +19,8 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public List<Question> getAllQuestions(int surveyId) {
-        return questionMapper.getAllQuestions(surveyId);
+    public List<Question> getAllQuestions(int surveyId,int userId) {
+        return questionMapper.getAllQuestions(surveyId,userId);
     }
 
     @Override
@@ -31,11 +31,6 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     public List<Question> getQuestionsBySurveyId(int surveyId) {
         return questionMapper.getQuestionsBySurveyId(surveyId);
-    }
-
-    @Override
-    public List<Question> getQuestionsByCategoryId(int categoryId) {
-        return questionMapper.getQuestionsByCategoryId(categoryId);
     }
 
     @Override
@@ -54,13 +49,13 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public List<Question> getQuestionsByPage(int currentPage, int pageSize, int surveyId, int categoryId, String keyword) {
+    public List<Question> getQuestionsByPage(int currentPage, int pageSize, int surveyId, int categoryId, String keyword,int userId) {
         int offset = (currentPage - 1) * pageSize;
-        return questionMapper.getQuestionsByPage(offset,pageSize,surveyId,categoryId,keyword);
+        return questionMapper.getQuestionsByPage(offset,pageSize,surveyId,categoryId,keyword,userId);
     }
 
     @Override
-    public int getQuestionCount(int surveyId, int categoryId, String keyword) {
-        return questionMapper.getQuestionCount(surveyId,categoryId,keyword);
+    public int getQuestionCount(int surveyId, int categoryId, String keyword,int userId) {
+        return questionMapper.getQuestionCount(surveyId,categoryId,keyword,userId);
     }
 }

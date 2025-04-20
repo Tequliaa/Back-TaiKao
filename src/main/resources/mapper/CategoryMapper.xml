@@ -19,6 +19,7 @@
     <select id="getAllCategories" resultMap="categoryResultMap">
         SELECT c.*, p.category_name AS parent_category_name
         FROM Category c LEFT JOIN Category p ON c.parent_category_id = p.category_id
+        WHERE c.created_by = #{userId}
     </select>
 
     <!-- 根据名称获取8条最近更新的分类 -->
@@ -32,18 +33,18 @@
 
     <!-- 获取子分类 -->
     <select id="getSubCategories" resultMap="categoryResultMap" parameterType="int">
-        SELECT * FROM Category WHERE parent_category_id = #{parentId}
+        SELECT * FROM Category WHERE parent_category_id = #{parentId} AND created_by = #{userId}
     </select>
 
     <!-- 获取父分类 -->
     <select id="getParentCategories" resultMap="categoryResultMap">
-        SELECT * FROM Category WHERE category_level = 1
+        SELECT * FROM Category WHERE category_level = 1 AND created_by = #{userId}
     </select>
 
     <!-- 添加分类 -->
     <insert id="addCategory" parameterType="Category">
-        INSERT INTO Category (category_name, parent_category_id, description, category_level, created_at, updated_at,created_by,sort_key)
-        VALUES (#{categoryName}, #{parentCategoryId}, #{description}, #{categoryLevel}, NOW(),NOW(),#{createdBy},#{sortKey})
+        INSERT INTO Category (category_name, parent_category_id, description, category_level, created_at, updated_at,sort_key,created_by)
+        VALUES (#{categoryName}, #{parentCategoryId}, #{description}, #{categoryLevel}, NOW(),NOW(),#{sortKey},#{createdBy})
     </insert>
 
     <!-- 删除分类 -->
@@ -63,6 +64,7 @@
             created_by =#{createdBy}
         WHERE category_id = #{categoryId}
     </update>
+
     <!-- 更新分类 -->
     <update id="updateCategorySortKey" parameterType="Category">
         UPDATE Category
@@ -70,17 +72,12 @@
             updated_at = NOW()
         WHERE category_id = #{categoryId}
     </update>
+
     <!-- 根据ID获取分类 -->
     <select id="getCategoryByCategoryId" resultMap="categoryResultMap" parameterType="int">
         SELECT * FROM Category WHERE category_id = #{categoryId}
     </select>
 
-    <!-- 根据名称搜索分类 -->
-    <select id="searchCategories" resultMap="categoryResultMap" parameterType="string">
-        SELECT c.*, p.category_name AS parent_category_name
-        FROM Category c LEFT JOIN Category p ON c.parent_category_id = p.category_id
-        WHERE c.category_name LIKE CONCAT('%', #{searchQuery}, '%')
-    </select>
 
     <!-- 分页获取分类 -->
     <select id="getCategoriesByPage" resultMap="categoryResultMap">
@@ -89,7 +86,7 @@
         <if test="keyword != null and keyword != ''">
             WHERE c.category_name LIKE CONCAT('%', #{keyword}, '%') OR c.description LIKE CONCAT('%', #{keyword}, '%')
         </if>
-        LIMIT #{pageSize} OFFSET #{offset}
+        WHERE c.created_by = #{userId} LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <!-- 获取分类数量 -->
@@ -98,6 +95,7 @@
         <if test="keyword != null and keyword != ''">
             WHERE category_name LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%')
         </if>
+        WHERE created_by = #{userId}
     </select>
 
 </mapper>

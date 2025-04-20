@@ -105,20 +105,42 @@
         SELECT * FROM Options WHERE question_id = #{questionId} ORDER BY sort_key
     </select>
 
+    <!-- 获取所有选项（限制用户创建的问卷） -->
     <select id="getAllOptions" resultMap="optionResultMap">
         SELECT o.*, q.description AS question_name
         FROM options o
                  JOIN questions q ON o.question_id = q.question_id
+                 JOIN surveys s ON q.survey_id = s.survey_id
+        WHERE s.created_by = #{userId}
     </select>
 
+    <!-- 分页获取选项（限制用户创建的问卷） -->
     <select id="getOptionsByPage" resultMap="optionResultMap">
         SELECT o.*, q.description AS question_name
         FROM options o
         JOIN questions q ON o.question_id = q.question_id
-        <if test="questionId != 0">
-            WHERE o.question_id = #{questionId}
-        </if>
+        JOIN surveys s ON q.survey_id = s.survey_id
+        <where>
+            s.created_by = #{userId}
+            <if test="questionId != 0">
+                AND o.question_id = #{questionId}
+            </if>
+        </where>
         LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 获取选项数量（限制用户创建的问卷） -->
+    <select id="getOptionCount" resultType="int">
+        SELECT COUNT(*)
+        FROM options o
+        JOIN questions q ON o.question_id = q.question_id
+        JOIN surveys s ON q.survey_id = s.survey_id
+        <where>
+            s.created_by = #{userId}
+            <if test="questionId != 0">
+                AND o.question_id = #{questionId}
+            </if>
+        </where>
     </select>
 
     <select id="getRowOptionsByQuestionId" resultMap="optionResultMap" parameterType="int">
@@ -131,12 +153,5 @@
         SELECT * FROM Options
         WHERE question_id = #{questionId} AND type = '列选项'
         ORDER BY sort_key
-    </select>
-
-    <select id="getOptionCount" resultType="int">
-        SELECT COUNT(*) FROM options
-        <if test="questionId != 0">
-            WHERE question_id = #{questionId}
-        </if>
     </select>
 </mapper>

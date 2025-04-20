@@ -22,11 +22,12 @@ public class CategoryController {
 
     @GetMapping("/list")
     public Result<Map<String, Object>> listCategories(
+            @RequestParam int userId,
             @RequestParam int pageNum,
             @RequestParam int pageSize,
             @RequestParam(defaultValue = "") String keyword) {
-        List<Category> categories = categoryService.getCategoriesByPage(pageNum, pageSize, keyword);
-        int totalCount = categoryService.getCategoryCount(keyword);
+        List<Category> categories = categoryService.getCategoriesByPage(pageNum, pageSize, keyword,userId);
+        int totalCount = categoryService.getCategoryCount(keyword,userId);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("categories", categories);
@@ -49,15 +50,15 @@ public class CategoryController {
     }
 
     @GetMapping("/getParentCategories")
-    public Result<List<Category>> getParentCategories() {
-        List<Category> categories = categoryService.getParentCategories();
+    public Result<List<Category>> getParentCategories(@RequestParam int userId) {
+        List<Category> categories = categoryService.getParentCategories(userId);
         return Result.success(categories);
     }
 
     @GetMapping("/getAll")
-    public Result<List<Category>> getAllCategories() {
+    public Result<List<Category>> getAllCategories(@RequestParam int userId) {
         System.out.println("getAllCategories");
-        List<Category> categories = categoryService.getAllCategories();
+        List<Category> categories = categoryService.getAllCategories(userId);
         //System.out.println("categories: ");
         //for(Category category:categories){
         //    System.out.println(category);

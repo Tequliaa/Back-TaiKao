@@ -50,14 +50,12 @@
 
     <select id="getAllQuestions" resultMap="questionResultMap">
         <include refid="baseQuery"/>
+        WHERE
         <if test="surveyId != 0">
-            WHERE q.survey_id = #{surveyId} ORDER BY q.sort_key,q.primary_category_id
+            q.survey_id = #{surveyId} AND
         </if>
-    </select>
-
-    <select id="getQuestionById" resultMap="questionResultMap" parameterType="int">
-        <include refid="baseQuery"/>
-        WHERE q.question_id = #{questionId}
+        s.created_by = #{userId}
+        ORDER BY q.sort_key, q.primary_category_id
     </select>
 
     <select id="getQuestionsBySurveyId" resultMap="questionResultMap" parameterType="int">
@@ -65,9 +63,9 @@
         WHERE q.survey_id = #{surveyId} ORDER BY q.sort_key,q.primary_category_id
     </select>
 
-    <select id="getQuestionsByCategoryId" resultMap="questionResultMap" parameterType="int">
+    <select id="getQuestionById" resultMap="questionResultMap" parameterType="int">
         <include refid="baseQuery"/>
-        WHERE q.primary_category_id = #{categoryId} ORDER BY q.sort_key,q.primary_category_id
+        WHERE q.question_id = #{questionId}
     </select>
 
     <insert id="addQuestionAndReturnId" parameterType="Question" useGeneratedKeys="true" keyProperty="questionId" keyColumn="question_id">
@@ -104,6 +102,7 @@
     <select id="getQuestionsByPage" resultMap="questionResultMap">
         <include refid="baseQuery"/>
         <where>
+            s.created_by = #{userId}
             <if test="surveyId != 0">
                 AND q.survey_id = #{surveyId}
             </if>
@@ -114,13 +113,16 @@
                 AND q.description LIKE CONCAT('%', #{keyword}, '%')
             </if>
         </where>
-        ORDER BY q.survey_id,q.sort_key,q.primary_category_id
+        ORDER BY q.survey_id, q.sort_key, q.primary_category_id
         LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <select id="getQuestionCount" resultType="int">
-        SELECT COUNT(*) FROM Questions q
+        SELECT COUNT(*)
+        FROM Questions q
+        JOIN Surveys s ON q.survey_id = s.survey_id
         <where>
+            s.created_by = #{userId}
             <if test="surveyId != 0">
                 AND q.survey_id = #{surveyId}
             </if>
