@@ -9,4 +9,5 @@ import java.util.List;
 public class SurveyDto {
     private Survey survey;
     private List<Question> questions;
+    private List<Category> categories;
 }

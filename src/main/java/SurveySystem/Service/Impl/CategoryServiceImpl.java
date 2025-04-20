@@ -22,6 +22,11 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public List<Category> getAllCategoriesById(int userId) {
+        return categoryMapper.getAllCategoriesById(userId);
+    }
+
+    @Override
     public List<Category> getSubCategories(int parentId) {
         return categoryMapper.getSubCategories(parentId);
     }
@@ -44,6 +49,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void updateCategory(Category category) {
         categoryMapper.updateCategory(category);
+    }
+
+    @Override
+    public void updateCategorySortKey(Category category) {
+        categoryMapper.updateCategorySortKey(category);
     }
 
     @Override

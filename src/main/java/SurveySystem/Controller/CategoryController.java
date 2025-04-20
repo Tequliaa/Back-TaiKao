@@ -65,10 +65,15 @@ public class CategoryController {
         return Result.success(categories);
     }
 
+    @GetMapping("/getAllById")
+    public Result<List<Category>> getAllCategoriesById(@RequestParam int userId) {
+        System.out.println("getAllCategories");
+        List<Category> categories = categoryService.getAllCategoriesById(userId);
+        return Result.success(categories);
+    }
+
     @PostMapping("/add")
     public Result<Void> addCategory(@RequestBody Category category) {
-        category.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-        category.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         categoryService.addCategory(category);
         return Result.success();
     }

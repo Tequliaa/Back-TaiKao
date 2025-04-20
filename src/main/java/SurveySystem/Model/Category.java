@@ -17,4 +17,6 @@ public class Category {
     private int categoryLevel;        // 分类层级
     private Timestamp createdAt; // 创建时间
     private Timestamp updatedAt; // 更新时间
+    private int createdBy;
+    private String sortKey;
 }

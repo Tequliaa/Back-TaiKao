@@ -8,7 +8,9 @@
         <result property="parentCategoryId" column="parent_category_id"/>
         <result property="parentCategoryName" column="parent_category_name"/>
         <result property="description" column="description"/>
+        <result property="sortKey" column="sort_key"/>
         <result property="categoryLevel" column="category_level"/>
+        <result property="createdBy" column="created_by"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -17,6 +19,15 @@
     <select id="getAllCategories" resultMap="categoryResultMap">
         SELECT c.*, p.category_name AS parent_category_name
         FROM Category c LEFT JOIN Category p ON c.parent_category_id = p.category_id
+    </select>
+
+    <!-- 根据名称获取8条最近更新的分类 -->
+    <select id="getAllCategoriesById" resultMap="categoryResultMap" parameterType="int">
+        SELECT c.*, p.category_name AS parent_category_name
+        FROM Category c LEFT JOIN Category p ON c.parent_category_id = p.category_id
+        WHERE c.created_by = #{userId}
+        ORDER BY c.updated_at DESC
+            LIMIT 8
     </select>
 
     <!-- 获取子分类 -->
@@ -31,8 +42,8 @@
 
     <!-- 添加分类 -->
     <insert id="addCategory" parameterType="Category">
-        INSERT INTO Category (category_name, parent_category_id, description, category_level, created_at, updated_at)
-        VALUES (#{categoryName}, #{parentCategoryId}, #{description}, #{categoryLevel}, #{createdAt}, #{updatedAt})
+        INSERT INTO Category (category_name, parent_category_id, description, category_level, created_at, updated_at,created_by,sort_key)
+        VALUES (#{categoryName}, #{parentCategoryId}, #{description}, #{categoryLevel}, NOW(),NOW(),#{createdBy},#{sortKey})
     </insert>
 
     <!-- 删除分类 -->
@@ -47,10 +58,18 @@
             parent_category_id = #{parentCategoryId},
             description = #{description},
             category_level = #{categoryLevel},
-            updated_at = #{updatedAt}
+            updated_at = NOW(),
+            created_at =NOW(),
+            created_by =#{createdBy}
         WHERE category_id = #{categoryId}
     </update>
-
+    <!-- 更新分类 -->
+    <update id="updateCategorySortKey" parameterType="Category">
+        UPDATE Category
+        SET sort_key=#{sortKey},
+            updated_at = NOW()
+        WHERE category_id = #{categoryId}
+    </update>
     <!-- 根据ID获取分类 -->
     <select id="getCategoryByCategoryId" resultMap="categoryResultMap" parameterType="int">
         SELECT * FROM Category WHERE category_id = #{categoryId}

@@ -1,11 +1,8 @@
 package SurveySystem.Controller;
 
 
-import SurveySystem.Model.Option;
-import SurveySystem.Model.Question;
-import SurveySystem.Model.Result;
-import SurveySystem.Model.Survey;
-import SurveySystem.Model.SurveyDto;
+import SurveySystem.Model.*;
+import SurveySystem.Service.CategoryService;
 import SurveySystem.Service.OptionService;
 import SurveySystem.Service.QuestionService;
 import SurveySystem.Service.SurveyService;
@@ -23,12 +20,15 @@ public class SurveyController {
     private final SurveyService surveyService;
     private final QuestionService questionService;
     private final OptionService optionService;
+    private final CategoryService categoryService;
     public SurveyController(SurveyService surveyService,
                             QuestionService questionService,
-                            OptionService optionService) {
+                            OptionService optionService,
+                            CategoryService categoryService) {
         this.surveyService = surveyService;
         this.questionService = questionService;
         this.optionService = optionService;
+        this.categoryService = categoryService;
     }
 
 
@@ -75,6 +75,10 @@ public class SurveyController {
 
         Survey survey = dto.getSurvey();
         List<Question> questions= dto.getQuestions();
+        List<Category> categories=dto.getCategories();
+        for(Category category:categories){
+            categoryService.updateCategorySortKey(category);
+        }
         if(survey.getSurveyId()!=0){
             surveyService.updateSurvey(survey);
             handleSurveyContent(questions,survey);
@@ -94,10 +98,15 @@ public class SurveyController {
     public Result<Void> updateBuildSurvey(@RequestBody SurveyDto dto) {
         Survey survey = dto.getSurvey();
         List<Question> questions=dto.getQuestions();
+        List<Category> categories=dto.getCategories();
+        for(Category category:categories){
+            System.out.println("Category: "+category);
+            categoryService.updateCategorySortKey(category);
+        }
         for(Question question:questions){
             System.out.println(question);
         }
-        survey.setStatus("草稿");
+        //survey.setStatus("草稿");
         surveyService.updateSurvey(survey);
         handleSurveyContent(questions,survey);
         return Result.success();
@@ -107,8 +116,8 @@ public class SurveyController {
         System.out.println("handleSurveyContent survey: "+survey);
         for(Question question:questions){
 
-            //问题存在，做得是更新操作
-            if(question.getQuestionId()!=0){
+            //问题存在，做得是更新操作。临时id可能小于0
+            if(question.getQuestionId()>0){
                 question.setSurveyId(survey.getSurveyId());
                 int questionId = question.getQuestionId();
                 questionService.updateQuestion(question);
@@ -121,8 +130,8 @@ public class SurveyController {
                     if(option.getIsOpenOption()==1||option.getIsSkip()==1){
                         option.setSortKey("100");
                     }
+                    option.setQuestionId(questionId);
                     if(option.getOptionId()!=0){
-                        option.setQuestionId(questionId);
                         optionService.updateOption(option);
                     }else {
                         optionService.addOption(option);
@@ -136,6 +145,9 @@ public class SurveyController {
                 questionService.addQuestionAndReturnId(question);
                 // Handle open/skip options if needed
                 int questionId =question.getQuestionId();
+                if(question.getType().equals("排序")){
+                    createRatingOption(questionId);
+                }
                 System.out.println("handleSurveyContent questionId: "+questionId);
                 System.out.println("handleSurveyContent surveyId: "+survey.getSurveyId());
 
@@ -149,6 +161,7 @@ public class SurveyController {
                     if(option.getIsOpenOption()==1||option.getIsSkip()==1){
                         option.setSortKey("100");
                     }
+                    option.setQuestionId(questionId);
                     if(option.getOptionId()!=0){
                         optionService.updateOption(option);
                     }else {
@@ -158,7 +171,16 @@ public class SurveyController {
             }
         }
     }
-
+    private void createRatingOption(int questionId) {
+        Option ratingOption = new Option();
+        ratingOption.setQuestionId(questionId);
+        ratingOption.setType("行选项");
+        ratingOption.setSortKey("100");
+        ratingOption.setDescription("请评分");
+        ratingOption.setIsOpenOption(0);
+        ratingOption.setIsSkip(0);
+        optionService.addOption(ratingOption);
+    }
     @PostMapping("/add")
     public Result<Void> createSurvey(@RequestBody Survey survey) {
         surveyService.createSurvey(survey);

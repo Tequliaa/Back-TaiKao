@@ -114,7 +114,8 @@
                 AND q.description LIKE CONCAT('%', #{keyword}, '%')
             </if>
         </where>
-        LIMIT #{pageSize} OFFSET #{offset} ORDER BY q.sort_key,q.primary_category_id
+        ORDER BY q.survey_id,q.sort_key,q.primary_category_id
+        LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <select id="getQuestionCount" resultType="int">

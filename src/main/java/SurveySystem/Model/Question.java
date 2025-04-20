@@ -15,15 +15,15 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int questionId;
     private int categoryId;
+    private String description;
+    private String type;
+    private String displayType;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "question_id") // 这会在Option表中创建外键
     private List<Option> options = new ArrayList<>();
     private String CategoryName;
     private int surveyId;
     private String surveyName;
-    private String description;
-    private String type;
-    private String displayType;
     private Timestamp createdAt;
     private Integer updatedBy;
     private Timestamp updatedAt;
