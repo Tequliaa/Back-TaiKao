@@ -53,11 +53,12 @@ public class UserController {
     public Result<Map<String, Object>> listUsers(
             @RequestParam int pageNum,
             @RequestParam int pageSize,
+            @RequestParam int userId,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int departmentId) {
 
-        List<User> users = userService.getUsersByPage(pageNum, pageSize, keyword, departmentId);
-        int totalCount = userService.getUserCount(keyword, departmentId);
+        List<User> users = userService.getUsersByPage(pageNum, pageSize, keyword, departmentId,userId);
+        int totalCount = userService.getUserCount(keyword, departmentId,userId);
 
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("users", users);
@@ -176,6 +177,7 @@ public class UserController {
     public void exportUsers(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int departmentId,
+            @RequestParam int userId,
             HttpServletResponse response) throws IOException {
         String departmentName="所有用户";
         if(departmentId!=0){
@@ -200,7 +202,7 @@ public class UserController {
             }
 
             // 获取数据
-            List<User> users = userService.getUsersByPage(1, Integer.MAX_VALUE, keyword, departmentId);
+            List<User> users = userService.getUsersByPage(1, Integer.MAX_VALUE, keyword, departmentId,userId);
 
             // 填充数据
             int rowNum = 1;
@@ -224,7 +226,8 @@ public class UserController {
     }
 
     @PostMapping("/import")
-    public Result<ImportResult> importUsers(@RequestParam("file") MultipartFile file) {
+    public Result<ImportResult> importUsers(@RequestParam("file") MultipartFile file,
+                                            @RequestParam(defaultValue = "") String departmentName) {
         if (file == null || file.isEmpty()) {
             return Result.error("请选择要导入的文件");
         }
@@ -257,9 +260,18 @@ public class UserController {
                 User user = new User();
                 user.setUsername(getCellValueAsString(row.getCell(0)).trim()); // 用户名
                 user.setName(getCellValueAsString(row.getCell(1)).trim()); // 用户昵称
-                String departmentName = getCellValueAsString(row.getCell(2)).trim(); // 部门名称
-                //存在问题，有可能被添加超级管理员，需要增加验证
-                user.setRole(getCellValueAsString(row.getCell(3)).trim()); // 角色
+
+                String defaultPassword = getCellValueAsString(row.getCell(2)).trim();//默认密码
+                String salt = HashUtils.getSalt();
+                String hashedPassword = HashUtils.hashPassword(defaultPassword, salt);
+                user.setPassword(hashedPassword);
+                user.setSalt(salt);
+
+                user.setRole("普通用户");
+
+                if(departmentName.isEmpty()||"".equals(departmentName)){
+                    departmentName = getCellValueAsString(row.getCell(3)).trim(); // 部门名称
+                }
 
                 // 检查用户名是否为空
                 if (user.getUsername() == null || user.getUsername().isEmpty()) {
@@ -274,13 +286,6 @@ public class UserController {
                     skipReasons.add("第" + (i+1) + "行用户名已存在");
                     continue;
                 }
-
-                // 设置默认密码
-                String defaultPassword = "123456";
-                String salt = HashUtils.getSalt();
-                String hashedPassword = HashUtils.hashPassword(defaultPassword, salt);
-                user.setPassword(hashedPassword);
-                user.setSalt(salt);
 
                 // 根据部门名称查找部门ID
                 if (!departmentName.isEmpty()) {

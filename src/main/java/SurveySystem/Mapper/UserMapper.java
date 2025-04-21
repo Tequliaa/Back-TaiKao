@@ -12,12 +12,11 @@ public interface UserMapper {
     User getUserByUserId(int id);
     User getUserByUsername(String username); // 通过用户名获取用户
     boolean updatePassword(User user); //重置用户密码
-    List<User> getAllUsers();
     void deleteUserById(int id);
     boolean updateUser(User user); // 更新用户信息
     // 获取分页用户列表
-    List<User> getUsersByPage(int offset, int pageSize, String keyword, int departmentId);
+    List<User> getUsersByPage(int offset, int pageSize, String keyword, int departmentId,int userId);
     // 获取用户总数
-    int getUserCount(String keyword,int departmentId);
+    int getUserCount(String keyword,int departmentId,int userId);
     List<User> getUsersByDepartmentId(int departmentId); //根据部门ID获取用户信息
 }

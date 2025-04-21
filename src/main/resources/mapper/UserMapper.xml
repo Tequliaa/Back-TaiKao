@@ -83,44 +83,6 @@
         DELETE FROM Users WHERE id = #{userId}
     </delete>
 
-    <!-- 获取所有用户信息 -->
-    <select id="getAllUsers" resultType="User">
-        SELECT
-            u.id,
-            u.name,
-            u.username,
-            u.password,
-            u.role,
-            u.department_id AS departmentId,
-            d.name AS departmentName
-        FROM Users u
-                 LEFT JOIN Departments d ON u.department_id = d.id
-    </select>
-
-    <!-- 分页查询用户 -->
-    <select id="getUsersByPage" resultType="User">
-        SELECT
-        u.id,
-        u.name,
-        u.username,
-        u.password,
-        u.role,
-        u.department_id AS departmentId,
-        d.name AS departmentName
-        FROM Users u
-        LEFT JOIN Departments d ON u.department_id = d.id
-        <where>
-            <if test="departmentId != 0">
-                u.department_id = #{departmentId}
-            </if>
-            <if test="keyword != null and keyword != ''">
-                <if test="departmentId != 0">AND</if>
-                (u.name LIKE CONCAT('%', #{keyword}, '%') OR u.role LIKE CONCAT('%', #{keyword}, '%'))
-            </if>
-        </where>
-        LIMIT #{pageSize} OFFSET #{offset}
-    </select>
-
     <select id="getUsersByDepartmentId" resultType="User">
         SELECT
             u.id,
@@ -138,16 +100,52 @@
             u.department_id = #{departmentId}
     </select>
 
+    <!-- 分页查询用户 -->
+    <select id="getUsersByPage" resultType="User">
+        SELECT
+        u.id,
+        u.name,
+        u.username,
+        u.password,
+        u.role,
+        u.department_id AS departmentId,
+        d.name AS departmentName
+        FROM Users u
+        LEFT JOIN Departments d ON u.department_id = d.id
+        <where>
+            <choose>
+                <when test="departmentId != 0">
+                    u.department_id = #{departmentId}
+                    <!-- 确保查询的部门是当前用户管理的部门之一 -->
+                    AND u.department_id IN (SELECT department_id FROM AdminDepartmentMapping WHERE user_id = #{userId})
+                </when>
+                <otherwise>
+                    u.department_id IN (SELECT department_id FROM AdminDepartmentMapping WHERE user_id = #{userId})
+                </otherwise>
+            </choose>
+            <if test="keyword != null and keyword != ''">
+                AND (u.name LIKE CONCAT('%', #{keyword}, '%') OR u.role LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
     <!-- 获取用户总数 -->
     <select id="getUserCount" resultType="int">
         SELECT COUNT(*) FROM Users
         <where>
-            <if test="departmentId != 0">
-                department_id = #{departmentId}
-            </if>
+            <choose>
+                <when test="departmentId != 0">
+                    department_id = #{departmentId}
+                    <!-- 确保查询的部门是当前用户管理的部门之一 -->
+                    AND department_id IN (SELECT department_id FROM AdminDepartmentMapping WHERE user_id = #{userId})
+                </when>
+                <otherwise>
+                    department_id IN (SELECT department_id FROM AdminDepartmentMapping WHERE user_id = #{userId})
+                </otherwise>
+            </choose>
             <if test="keyword != null and keyword != ''">
-                <if test="departmentId != 0">AND</if>
-                (username LIKE CONCAT('%', #{keyword}, '%') OR role LIKE CONCAT('%', #{keyword}, '%'))
+                AND (username LIKE CONCAT('%', #{keyword}, '%') OR role LIKE CONCAT('%', #{keyword}, '%'))
             </if>
         </where>
     </select>

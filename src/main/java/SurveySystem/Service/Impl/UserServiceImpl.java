@@ -51,12 +51,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return userMapper.getAllUsers();
-    }
-
-
-    @Override
     public void deleteUserById(int id) {
         userMapper.deleteUserById(id);
     }
@@ -67,14 +61,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getUsersByPage(int currentPage, int pageSize, String keyword, int departmentId) {
+    public List<User> getUsersByPage(int currentPage, int pageSize, String keyword,int departmentId, int userId) {
         int offset = (currentPage-1)*pageSize;
-        return userMapper.getUsersByPage(offset,pageSize,keyword,departmentId);
+        return userMapper.getUsersByPage(offset,pageSize,keyword,departmentId,userId);
     }
 
     @Override
-    public int getUserCount(String keyword, int departmentId) {
-        return userMapper.getUserCount(keyword,departmentId);
+    public int getUserCount(String keyword, int departmentId,int userId) {
+        return userMapper.getUserCount(keyword,departmentId,userId);
     }
 
     @Override
