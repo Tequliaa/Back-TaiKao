@@ -1,8 +1,11 @@
 package SurveySystem.Controller;
 
 import SurveySystem.Model.*;
+import SurveySystem.Model.vo.OptionAnalysisVO;
+import SurveySystem.Model.vo.QuestionAnalysisVO;
 import SurveySystem.Service.*;
 import SurveySystem.Utils.IpUtils;
+import io.lettuce.core.ScriptOutputType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.*;
@@ -96,6 +99,12 @@ public class ResponseController {
         }
     }
 
+    /**
+     * 问卷的统计数据
+     * @param surveyId
+     * @param departmentId
+     * @return
+     */
     @GetMapping("/statistics")
     public Result<Map<String, Object>> getResponseStatistics(
             @RequestParam int surveyId,
@@ -103,13 +112,28 @@ public class ResponseController {
         try {
             Survey survey = surveyService.getSurveyById(surveyId);
             List<Question> questions = questionService.getQuestionsBySurveyId(surveyId);
-
+            List<QuestionAnalysisVO> questionAnalysisVOList = new ArrayList<>();
             // 存储矩阵题单元格选择情况的Map
             Map<Integer, List<Map<String, Object>>> matrixCellData = new HashMap<>();
 
             for (Question question : questions) {
+                QuestionAnalysisVO questionAnalysisVO = new QuestionAnalysisVO();
+                questionAnalysisVO.setQuestionName(question.getDescription());
+                questionAnalysisVO.setQuestionType(question.getType());
+
                 List<Option> options = optionService.getOptionsWithCheckCountByQuestionId(question.getQuestionId(), departmentId);
+                List<OptionAnalysisVO> analysisOptions=new ArrayList<>();
+                options.forEach(option -> {
+                    OptionAnalysisVO optionAnalysisVO=new OptionAnalysisVO();
+                    optionAnalysisVO.setDescription(option.getDescription());
+                    optionAnalysisVO.setCheckCount(option.getCheckCount());
+                    //System.out.println("optionAnalysisVO "+optionAnalysisVO);
+                    analysisOptions.add(optionAnalysisVO);
+                });
+                questionAnalysisVOList.add(questionAnalysisVO);
                 question.setOptions(options);
+                questionAnalysisVO.setOptions(analysisOptions);
+
                 //if(question.getType().equals("排序")){
                 //    for(Option option:question.getOptions()){
                 //        System.out.println("平均排序顺序"+option.getCheckCount());
@@ -120,6 +144,8 @@ public class ResponseController {
                     List<Map<String, Object>> cellData = optionService.getMatrixCellCheckCount(question.getQuestionId(), departmentId);
                     matrixCellData.put(question.getQuestionId(), cellData);
                 }
+
+
             }
             // 在填充 matrixCellData 后添加日志输出
             //System.out.println("===== 矩阵题单元格数据 =====");
@@ -129,6 +155,7 @@ public class ResponseController {
             //        System.out.println("单元格数据: " + cell);
             //    });
             //});
+            responseService.getAnalysisData(questionAnalysisVOList);
             List<UserSurvey> userSurveys=userSurveyService.getUserDepartmentInfoBySurveyId(surveyId);
 
             int unfinishedTotalRecords = userSurveyService.getUserInfoCount(surveyId, departmentId);

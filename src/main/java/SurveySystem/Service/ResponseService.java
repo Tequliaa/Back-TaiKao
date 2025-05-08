@@ -1,7 +1,10 @@
 package SurveySystem.Service;
 
+import SurveySystem.Model.Question;
 import SurveySystem.Model.Response;
+import SurveySystem.Model.vo.QuestionAnalysisVO;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -22,4 +25,10 @@ public interface ResponseService {
     // 重置指定用户的响应记录的有效性，但排除指定的记录ID
     void resetIsValidForResponsesExcludingIds(int userId, int surveyId, Set<Integer> excludedIds);
     List<Response> getExistingFileResponses(int questionId);
+
+    /**
+     * 获取指定部门的问卷分析数据
+     * @param questionAnalysisVO
+     */
+    void getAnalysisData(List<QuestionAnalysisVO> questionAnalysisVO) throws IOException;
 }

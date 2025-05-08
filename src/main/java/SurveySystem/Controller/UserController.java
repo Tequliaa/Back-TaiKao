@@ -110,7 +110,10 @@ public class UserController {
         user.setSalt(salt);
         //新注册用户聚集地
         user.setDepartmentId(1);
+
         //user.setName("用户");
+        String name = "用户";
+        user.setName(name+user.getUsername());
         userService.registerUser(user);
         int userId=user.getId();
         List<DepartmentSurvey> departmentSurveys=departmentSurveyService.getDepartmentSurveys(user.getDepartmentId());
