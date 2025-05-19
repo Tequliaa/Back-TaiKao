@@ -32,6 +32,15 @@ public class SurveyController {
     }
 
 
+    /**
+     * 获取问卷列表
+     * @param pageNum
+     * @param pageSize
+     * @param keyword
+     * @param userId
+     * @param role
+     * @return
+     */
     @GetMapping("/list")
     public Result<Map<String, Object>> listSurveys(
             @RequestParam int pageNum,
@@ -47,6 +56,11 @@ public class SurveyController {
         return Result.success(resultMap);
     }
 
+    /**
+     * 获取所有问卷
+     * @param userId
+     * @return
+     */
     @GetMapping("/getAll")
     public Result<List<Survey>> getAllSurveys(@RequestParam int userId) {
         System.out.println("请求到这里了");
@@ -54,6 +68,11 @@ public class SurveyController {
         return Result.success(surveys);
     }
 
+    /**
+     * 获取问卷详情
+     * @param surveyId
+     * @return
+     */
     @GetMapping("/getSurveyAndQuestionsById")
     public Result<Map<String, Object>> getSurveyById(@RequestParam int surveyId) {
         Survey survey = surveyService.getSurveyById(surveyId);
@@ -69,6 +88,11 @@ public class SurveyController {
     }
 
 
+    /**
+     * 保存问卷
+     * @param dto
+     * @return
+     */
     @PostMapping("/saveBuild")
     public Result<Integer> saveSurvey(@RequestBody SurveyDto dto) {
         System.out.println("survey: "+ dto.getSurvey());
@@ -94,6 +118,11 @@ public class SurveyController {
     }
 
 
+    /**
+     * 更新问卷
+     * @param dto
+     * @return
+     */
     @PostMapping("/updateBuild")
     public Result<Void> updateBuildSurvey(@RequestBody SurveyDto dto) {
         Survey survey = dto.getSurvey();
@@ -112,6 +141,11 @@ public class SurveyController {
         return Result.success();
     }
 
+    /**
+     * 处理问卷内容
+     * @param questions
+     * @param survey
+     */
     public void handleSurveyContent(List<Question> questions,Survey survey){
         System.out.println("handleSurveyContent survey: "+survey);
         for(Question question:questions){
@@ -171,6 +205,7 @@ public class SurveyController {
             }
         }
     }
+    //创建评分题的选项
     private void createRatingOption(int questionId) {
         Option ratingOption = new Option();
         ratingOption.setQuestionId(questionId);
@@ -181,12 +216,23 @@ public class SurveyController {
         ratingOption.setIsSkip(0);
         optionService.addOption(ratingOption);
     }
+
+    /**
+     * 创建问卷
+     * @param survey
+     * @return
+     */
     @PostMapping("/add")
     public Result<Void> createSurvey(@RequestBody Survey survey) {
         surveyService.createSurvey(survey);
         return Result.success();
     }
 
+    /**
+     * 更新问卷状态
+     * @param survey
+     * @return
+     */
     @PutMapping("/update")
     public Result<Void> updateSurvey(@RequestBody Survey survey) {
         survey.setStatus("草稿");
@@ -194,6 +240,11 @@ public class SurveyController {
         return Result.success();
     }
 
+    /**
+     * 删除问卷
+     * @param surveyId
+     * @return
+     */
     @DeleteMapping("/delete")
     public Result<Void> deleteSurvey(@RequestParam int surveyId) {
         surveyService.deleteSurvey(surveyId);

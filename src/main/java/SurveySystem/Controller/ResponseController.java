@@ -40,6 +40,13 @@ public class ResponseController {
         this.userSurveyService = userSurveyService;
     }
 
+    /**
+     * 答题列表
+     * @param surveyId
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
     @GetMapping("/list")
     public Result<Map<String, Object>> listResponses(
             @RequestParam int surveyId,
@@ -65,6 +72,12 @@ public class ResponseController {
         }
     }
 
+    /**
+     * 用户答题详情
+     * @param surveyId
+     * @param userId
+     * @return
+     */
     @GetMapping("/details")
     public Result<Map<String, Object>> getResponseDetails(
             @RequestParam int surveyId,
@@ -155,7 +168,7 @@ public class ResponseController {
             //        System.out.println("单元格数据: " + cell);
             //    });
             //});
-            responseService.getAnalysisData(questionAnalysisVOList);
+            //responseService.getAnalysisData(questionAnalysisVOList);
             List<UserSurvey> userSurveys=userSurveyService.getUserDepartmentInfoBySurveyId(surveyId);
 
             int unfinishedTotalRecords = userSurveyService.getUserInfoCount(surveyId, departmentId);
@@ -173,6 +186,15 @@ public class ResponseController {
         }
     }
 
+    /**
+     * 提交问卷
+     * @param surveyId
+     * @param isSaveAction
+     * @param answerUserId
+     * @param formData
+     * @param fileMap
+     * @return
+     */
     @PostMapping("/submit")
     public Result<Void> submitResponse(
             @RequestParam int surveyId,
@@ -225,6 +247,7 @@ public class ResponseController {
         }
     }
 
+    //处理文件上传
     private void handleFileUploads(Map<String, MultipartFile> fileMap, int surveyId, int userId, String ipAddress) throws IOException {
         System.out.println("有新文件上传");
 
@@ -292,6 +315,7 @@ public class ResponseController {
     }
 
 
+    // 处理表单数据
     private void processFormData(Map<String, String> formData, int surveyId, int userId, String ipAddress, boolean isSaveAction) throws Exception {
         // //调试输出开始
         //System.out.println("=== 完整的formData内容 ===");
@@ -352,6 +376,7 @@ public class ResponseController {
         responseService.updateResponse(response);
     }
 
+    //处理单选多选和填空题
     private void processQuestionAnswer(String paramName,String paramValue, int surveyId, int questionId,
                                      String ipAddress, int userId, boolean isSaveAction) throws Exception {
         if (paramName.contains("_row_")) {
@@ -363,6 +388,7 @@ public class ResponseController {
         }
     }
 
+    //处理评分题
     private void processRatingAnswer(String paramName, String paramValue, int surveyId, String ipAddress, int userId) throws Exception {
         String[] parts = paramName.split("_");
         int questionId = Integer.parseInt(parts[1]);
@@ -382,6 +408,7 @@ public class ResponseController {
         responseService.updateResponse(response);
     }
 
+    //处理开放题
     private void processOpenAnswer(String paramName, String paramValue){
         int optionId = Integer.parseInt(paramName.split("_")[2]);
         Response response = new Response();

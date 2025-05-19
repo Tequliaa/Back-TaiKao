@@ -27,6 +27,14 @@ public class DepartmentController {
     }
 
 
+    /**
+     * 分页获取所有部门列表
+     * @param pageNum
+     * @param pageSize
+     * @param keyword
+     * @param userId
+     * @return
+     */
     @GetMapping("/list")
     public Result<Map<String, Object>> listDepartments(
             @RequestParam int pageNum,
@@ -41,6 +49,12 @@ public class DepartmentController {
         return Result.success(resultMap);
     }
 
+    /**
+     * 获取所有部门列表
+     * @param userId
+     * @return
+     * @throws SQLException
+     */
     @GetMapping("/getAllById")
     public Result<List<Department>> getAllDepartmentsById(@RequestParam int userId) throws SQLException {
         System.out.println("请求到这里了");
@@ -49,7 +63,12 @@ public class DepartmentController {
     }
 
 
-
+    /**
+     * 创建部门
+     * @param department
+     * @param userId
+     * @return
+     */
     @PostMapping("/add")
     public Result<Void> createSurvey(@RequestBody Department department,@RequestParam int userId) {
         departmentService.addDepartment(department);
@@ -61,12 +80,22 @@ public class DepartmentController {
         return Result.success();
     }
 
+    /**
+     * 更新部门信息
+     * @param department
+     * @return
+     */
     @PutMapping("/update")
     public Result<Void> updateDepartment(@RequestBody Department department) {
         departmentService.updateDepartment(department);
         return Result.success();
     }
 
+    /**
+     *
+     * @param departmentId
+     * @return
+     */
     @DeleteMapping("/delete")
     public Result<Void> deleteDepartment(@RequestParam int departmentId) {
         departmentService.deleteDepartment(departmentId);

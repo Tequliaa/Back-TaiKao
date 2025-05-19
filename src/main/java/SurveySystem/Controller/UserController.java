@@ -88,7 +88,7 @@ public class UserController {
         claims.put("role",loginUser.getRole());
         String token = JwtUtil.genToken(claims);
 
-        // 存储到 Redis（替代 Jedis）
+        // 存储到 Redis
         redisTemplate.opsForValue().set(token, token);
         redisTemplate.expire(token, 60 * 60, java.util.concurrent.TimeUnit.SECONDS);
 

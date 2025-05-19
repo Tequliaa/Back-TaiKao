@@ -24,6 +24,16 @@ public class QuestionController {
         this.surveyService = surveyService;
     }
 
+    /**
+     * 分页获取问题列表
+     * @param pageNum
+     * @param pageSize
+     * @param userId
+     * @param keyword
+     * @param surveyId
+     * @param categoryId
+     * @return
+     */
     @GetMapping("/list")
     public Result<Map<String, Object>> listQuestions(
             @RequestParam int pageNum,
@@ -47,6 +57,12 @@ public class QuestionController {
         return Result.success(resultMap);
     }
 
+    /**
+     * 获取所有问题列表
+     * @param surveyId
+     * @param userId
+     * @return
+     */
     @GetMapping("/getAll")
     public Result<Map<String, Object>> getAllQuestions(@RequestParam(defaultValue = "0") int surveyId,
                                                        @RequestParam int userId) {
@@ -66,6 +82,11 @@ public class QuestionController {
     }
 
 
+    /**
+     * 获取单个问题详情
+     * @param questionId
+     * @return
+     */
     @GetMapping("/getById")
     public Result<Question> getQuestionById(@RequestParam int questionId) {
         Question question = questionService.getQuestionById(questionId);
@@ -73,6 +94,11 @@ public class QuestionController {
         return Result.success(question);
     }
 
+    /**
+     * 创建问题
+     * @param question
+     * @return
+     */
     @PostMapping("/add")
     public Result<Void> createQuestion(@RequestBody Question question) {
         questionService.addQuestionAndReturnId(question);
@@ -88,18 +114,29 @@ public class QuestionController {
         return Result.success();
     }
 
+    /**
+     * 更新问题
+     * @param question
+     * @return
+     */
     @PutMapping("/update")
     public Result<Void> updateQuestion(@RequestBody Question question) {
         questionService.updateQuestion(question);
         return Result.success();
     }
 
+    /**
+     * 删除问题
+     * @param questionId
+     * @return
+     */
     @DeleteMapping("/delete")
     public Result<Void> deleteQuestion(@RequestParam int questionId) {
         questionService.deleteQuestion(questionId);
         return Result.success();
     }
 
+    //创建开放选项
     private void createOpenOption(int questionId) {
         Option openOption = new Option();
         openOption.setQuestionId(questionId);
@@ -111,6 +148,7 @@ public class QuestionController {
         optionService.addOption(openOption);
     }
 
+    //创建跳转选项
     private void createSkipOption(int questionId) {
         Option skipOption = new Option();
         skipOption.setQuestionId(questionId);

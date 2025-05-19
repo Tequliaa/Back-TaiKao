@@ -39,6 +39,15 @@ public class UserSurveyController {
         this.departmentSurveyService = departmentSurveyService;
     }
 
+    /**
+     * 获取未完成的用户列表
+     * @param surveyId
+     * @param departmentId
+     * @param pageNum
+     * @param pageSize
+     * @return
+     * @throws SQLException
+     */
     @GetMapping("/unfinishedUsers")
     public Result<Map<String, Object>> listUnfinishedUsers(
             @RequestParam int surveyId,
@@ -56,6 +65,14 @@ public class UserSurveyController {
         return Result.success(resultMap);
     }
 
+    /**
+     * 获取用户部门信息
+     * @param pageNum
+     * @param pageSize
+     * @param keyword
+     * @param userId
+     * @return
+     */
     @GetMapping("/list")
     public Result<Map<String, Object>> listUserSurveys(
             @RequestParam(defaultValue = "1") int pageNum,
@@ -72,6 +89,12 @@ public class UserSurveyController {
         return Result.success(resultMap);
     }
 
+    /**
+     * 发布问卷到部门
+     * @param departmentId
+     * @param surveyId
+     * @return
+     */
     @PostMapping("/assignSurvey")
     public Result<String> assignSurveyToDepartment(
             @RequestParam int departmentId,
@@ -96,6 +119,13 @@ public class UserSurveyController {
 
     }
 
+    /**
+     * 更新问卷状态
+     * @param surveyId
+     * @param userId
+     * @param status
+     * @return
+     */
     @PostMapping("/update")
     public Result<String> updateSurveyStatus(
             @RequestParam int surveyId,
@@ -117,6 +147,12 @@ public class UserSurveyController {
         }
     }
 
+    /**
+     * 获取用户答卷信息
+     * @param userId
+     * @param surveyId
+     * @return
+     */
     @GetMapping("/getUserSurvey")
     public Result<UserSurvey> getUserSurveyByUserIdAndSurveyId(
             @RequestParam int userId,
@@ -126,6 +162,14 @@ public class UserSurveyController {
         return Result.success(userSurvey);
     }
 
+    /**
+     * 导出未完成名单
+     * @param surveyId
+     * @param departmentId
+     * @param response
+     * @throws IOException
+     * @throws SQLException
+     */
     @GetMapping("/exportUnfinishedList")
     public void exportUnfinishedList(
             @RequestParam int surveyId,

@@ -21,6 +21,15 @@ public class OptionController {
         this.optionService = optionService;
     }
 
+    /**
+     * 分页获取选项列表
+     * @param pageNum
+     * @param pageSize
+     * @param userId
+     * @param keyword
+     * @param questionId
+     * @return
+     */
     @GetMapping("/list")
     public Result<Map<String, Object>> listOptions(
             @RequestParam int pageNum,
@@ -39,6 +48,12 @@ public class OptionController {
         return Result.success(resultMap);
     }
 
+    /**
+     * 获取选项列表
+     * @param questionId
+     * @param userId
+     * @return
+     */
     @GetMapping("/getAll")
     public Result<List<Option>> getAllOptions(@RequestParam(defaultValue = "0") int questionId,
                                               @RequestParam int userId) {
@@ -48,12 +63,22 @@ public class OptionController {
         return Result.success(options);
     }
 
+    /**
+     * 根据问题ID获取选项列表
+     * @param optionId
+     * @return
+     */
     @GetMapping("/getById")
     public Result<Option> getOptionById(@RequestParam int optionId) {
         Option option = optionService.getOptionById(optionId);
         return Result.success(option);
     }
 
+    /**
+     * 创建选项
+     * @param option
+     * @return
+     */
     @PostMapping("/add")
     public Result<Void> createOption(@RequestBody Option option) {
         if (!"填空".equals(option.getType()) && option.getDescription() == null) {
@@ -63,6 +88,11 @@ public class OptionController {
         return Result.success();
     }
 
+    /**
+     * 更新选项
+     * @param option
+     * @return
+     */
     @PutMapping("/update")
     public Result<Void> updateOption(@RequestBody Option option) {
         option.setSkipTo(option.getIsSkip() == 0 ? 0 : option.getSkipTo());
@@ -71,18 +101,33 @@ public class OptionController {
         return Result.success();
     }
 
+    /**
+     * 删除选项
+     * @param optionId
+     * @return
+     */
     @DeleteMapping("/delete")
     public Result<Void> deleteOption(@RequestParam int optionId) {
         optionService.deleteOption(optionId);
         return Result.success();
     }
 
+    /**
+     * 获取行选项列表
+     * @param questionId
+     * @return
+     */
     @GetMapping("/getRowOptions")
     public Result<List<Option>> getRowOptions(@RequestParam int questionId) {
         List<Option> rowOptions = optionService.getRowOptionsByQuestionId(questionId);
         return Result.success(rowOptions);
     }
 
+    /**
+     * 获取列选项列表
+     * @param questionId
+     * @return
+     */
     @GetMapping("/getColumnOptions")
     public Result<List<Option>> getColumnOptions(@RequestParam int questionId) {
         List<Option> columnOptions = optionService.getColumnOptionsByQuestionId(questionId);
