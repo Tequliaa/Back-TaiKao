@@ -1,13 +1,17 @@
 package SurveySystem.Controller;
 
+import SurveySystem.Context.BaseContext;
 import SurveySystem.Model.*;
 import SurveySystem.Service.DepartmentService;
 import SurveySystem.Service.DepartmentSurveyService;
 import SurveySystem.Service.UserService;
 import SurveySystem.Service.UserSurveyService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,32 +24,31 @@ import java.util.List;
 
 import SurveySystem.Utils.HashUtils;
 import SurveySystem.Utils.JwtUtil;
-import SurveySystem.Utils.ThreadLocalUtil;
-import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.time.LocalDate;
 
+@Slf4j
 @RestController
 @RequestMapping("/user")
+
 public class UserController {
     private final UserService userService;
     public final DepartmentService departmentService;
-    private final StringRedisTemplate redisTemplate;
     private final DepartmentSurveyService departmentSurveyService;
     private final UserSurveyService userSurveyService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // 依赖注入（替代手动 new 和 init()）
     public UserController(UserService userService,DepartmentService departmentService,
                           DepartmentSurveyService departmentSurveyService,
-                          UserSurveyService userSurveyService,
-                          StringRedisTemplate redisTemplate) {
+                          UserSurveyService userSurveyService) {
         this.userService = userService;
         this.departmentService = departmentService;
         this.departmentSurveyService = departmentSurveyService;
         this.userSurveyService = userSurveyService;
-        this.redisTemplate = redisTemplate;
     }
 
     //------------------------ 用户列表查询 ------------------------
@@ -81,16 +84,16 @@ public class UserController {
         }
 
         // 生成 JWT Token
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("id", loginUser.getId());
-        claims.put("username", loginUser.getUsername());
-        System.out.println("userRole: "+loginUser.getRole());
-        claims.put("role",loginUser.getRole());
-        String token = JwtUtil.genToken(claims);
+        String token = jwtUtil.generateToken((long) loginUser.getId());
+        User user = userService.getUserByUserId(loginUser.getId());
 
-        // 存储到 Redis
-        redisTemplate.opsForValue().set(token, token);
-        redisTemplate.expire(token, 60 * 60, java.util.concurrent.TimeUnit.SECONDS);
+        // 正确转换User为Map
+        ObjectMapper objectMapper = new ObjectMapper();
+        // 直接指定目标类型为 Map.class，Jackson 会自动转为 Map<String, Object>
+        Map<String, Object> userInfo = objectMapper.convertValue(user, Map.class);
+
+        // 存储会话至redis内
+        jwtUtil.storeSessionInRedis(token, userInfo);
 
         return Result.success(token);
     }
@@ -124,9 +127,9 @@ public class UserController {
     //------------------------ 获取当前用户信息 ------------------------
     @GetMapping("/info")
     public Result<User> getUserInfo() {
-        Map<String, Object> map = ThreadLocalUtil.get();
-        String username = (String) map.get("username");
-        User user = userService.getUserByUsername(username);
+        int userId = BaseContext.getCurrentId();
+        log.info("当前用户id：" + userId);
+        User user = userService.getUserByUserId(userId);
         return Result.success(user);
     }
 
@@ -138,9 +141,9 @@ public class UserController {
             @RequestParam String rePwd,
             @RequestHeader("Authorization") String token) {
 
-        Map<String, Object> map = ThreadLocalUtil.get();
-        String username = (String) map.get("username");
-        User loginUser = userService.getUserByUsername(username);
+        int userId = BaseContext.getCurrentId();
+        log.info("当前用户id：" + userId);
+        User loginUser = userService.getUserByUserId(userId);
 
         if (oldPwd == null || newPwd == null || rePwd == null) {
             return Result.error("缺少必要的参数");
@@ -158,7 +161,7 @@ public class UserController {
         userService.updatePassword(loginUser);
 
         // 删除 Redis 中的旧 Token
-        redisTemplate.delete(token);
+        jwtUtil.inValidate(token);
         return Result.success();
     }
 

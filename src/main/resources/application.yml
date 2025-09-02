@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: surveyPlatform
+  datasource:
+    url: jdbc:mysql://localhost:3306/plat_question?useSSL=false&serverTimezone=UTC
+    username: root
+    password: rootroot
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: root@123456
+      database: 5
+      timeout: 5000
+      lettuce:
+        pool:
+          # 连接池最大连接数
+          max-active: 200
+          # 连接池最大阻塞等待时间（使用负值表示没有限制）
+          max-wait: -1ms
+          # 连接池中的最大空闲连接
+          max-idle: 10
+          # 连接池中的最小空闲连接
+          min-idle: 0
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 50MB
+  # 添加跨域配置
+  mvc:
+    cors:
+      allowed-origins: "*"
+      allowed-methods: "*"
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+
+
+server:
+  port: 8082
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: SurveySystem.Model
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-scan:
+    base-package: SurveySystem.Mapper
+
+
+jwt:
+  secret: debiaofan
+  expiration: 2592000
