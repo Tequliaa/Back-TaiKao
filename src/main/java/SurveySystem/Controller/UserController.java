@@ -124,7 +124,21 @@ public class UserController {
         return Result.success();
     }
 
-    //------------------------ 获取当前用户信息 ------------------------
+    /**
+     * 用户登出操作
+     * @return
+     */
+    @PostMapping("/logout")
+    public Result logout(@RequestHeader("Authorization") String token) {
+        jwtUtil.inValidate(token);
+        return Result.success();
+    }
+
+
+    /**
+     * 获取当前用户信息
+     * @return
+     */
     @GetMapping("/info")
     public Result<User> getUserInfo() {
         int userId = BaseContext.getCurrentId();
