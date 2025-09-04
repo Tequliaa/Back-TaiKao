@@ -42,11 +42,11 @@ server:
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: SurveySystem.Model
+  type-aliases-package: SurveySystem.entity
   configuration:
     map-underscore-to-camel-case: true
   mapper-scan:
-    base-package: SurveySystem.Mapper
+    base-package: SurveySystem.mapper
 
 
 jwt:

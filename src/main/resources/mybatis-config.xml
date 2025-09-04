@@ -6,7 +6,7 @@
     <properties resource="db.properties"/>
     <typeAliases>
 <!--        <typeAlias alias= "User" type="Model.User"/>-->
-        <package name="SurveySystem.Model"/>
+        <package name="SurveySystem.entity"/>
     </typeAliases>
     <environments default="development">
         <environment id="development">

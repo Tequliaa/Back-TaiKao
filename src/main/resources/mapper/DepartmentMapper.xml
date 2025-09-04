@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="SurveySystem.Mapper.DepartmentMapper">
+<mapper namespace="SurveySystem.mapper.DepartmentMapper">
 
     <!-- 获取指定用户可管理的所有部门信息 -->
     <select id="getAllDepartmentsByUserId" resultType="Department">
