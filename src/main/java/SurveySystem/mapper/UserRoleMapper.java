@@ -26,4 +26,7 @@ public interface UserRoleMapper {
 
     //通过角色id查找用户列表
     List<User> getUsersByRoleId(int roleId);
+
+    //为对应部门下的用户赋角色。
+    void addRolesToDepartment(List<User> users,int roleId);
 }

@@ -32,4 +32,14 @@
         select * from user_role where role_id = #{roleId}
     </select>
 
+    <!-- 为用户分配角色 -->
+    <insert id="addRolesToDepartment">
+        INSERT IGNORE INTO user_role (user_id, role_id)
+        VALUES
+        <foreach collection="users" item="user" separator=",">
+            (#{user.id}, #{roleId})
+        </foreach>
+    </insert>
+
+
 </mapper>

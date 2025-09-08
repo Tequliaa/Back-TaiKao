@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 @Mapper
 public interface UserMapper {
-    int registerUser(User user); // 注册用户
+    int insertUser(User user); // 注册用户
     int batchInsertUsers(List<User> userList);
     User getUserByUserId(int id);
     User getUserByUsername(String username); // 通过用户名获取用户

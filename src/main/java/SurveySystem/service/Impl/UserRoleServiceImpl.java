@@ -3,6 +3,7 @@ package SurveySystem.service.Impl;
 import SurveySystem.entity.Role;
 import SurveySystem.entity.User;
 import SurveySystem.entity.UserRole;
+import SurveySystem.mapper.UserMapper;
 import SurveySystem.mapper.UserRoleMapper;
 import SurveySystem.service.UserRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ import java.util.List;
 public class UserRoleServiceImpl implements UserRoleService {
     @Autowired
     private UserRoleMapper userRoleMapper;
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public int insertUserRole(UserRole userRole) {
@@ -28,7 +31,8 @@ public class UserRoleServiceImpl implements UserRoleService {
 
     @Override
     public void addRolesToDepartment(int departmentId, int roleId) {
-
+        List<User> users = userMapper.getUsersByDepartmentId(departmentId);
+        userRoleMapper.addRolesToDepartment(users,roleId);
     }
 
     @Override
