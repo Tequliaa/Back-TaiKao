@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class SurveyDto {
+public class SurveyDTO {
     private Survey survey;
     private List<Question> questions;
     private List<Category> categories;

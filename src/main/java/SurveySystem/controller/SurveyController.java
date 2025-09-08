@@ -2,7 +2,7 @@ package SurveySystem.controller;
 
 
 import SurveySystem.entity.*;
-import SurveySystem.entity.dto.SurveyDto;
+import SurveySystem.entity.dto.SurveyDTO;
 import SurveySystem.service.CategoryService;
 import SurveySystem.service.OptionService;
 import SurveySystem.service.QuestionService;
@@ -94,7 +94,7 @@ public class SurveyController {
      * @return
      */
     @PostMapping("/saveBuild")
-    public Result<Integer> saveSurvey(@RequestBody SurveyDto dto) {
+    public Result<Integer> saveSurvey(@RequestBody SurveyDTO dto) {
         System.out.println("survey: "+ dto.getSurvey());
 
         Survey survey = dto.getSurvey();
@@ -124,7 +124,7 @@ public class SurveyController {
      * @return
      */
     @PostMapping("/updateBuild")
-    public Result<Void> updateBuildSurvey(@RequestBody SurveyDto dto) {
+    public Result<Void> updateBuildSurvey(@RequestBody SurveyDTO dto) {
         Survey survey = dto.getSurvey();
         List<Question> questions=dto.getQuestions();
         List<Category> categories=dto.getCategories();

@@ -23,8 +23,8 @@
     </delete>
 
     <!-- 通过用户查找角色列表 -->
-    <select id="getRolesByUserId" parameterType="int" resultType="Role">
-        select * from user_role where user_id = #{userId}
+    <select id="getRoleIdsByUserId" parameterType="int" resultType="int">
+        select role_id from user_role where user_id = #{userId}
     </select>
 
     <!-- 通过角色id查找用户列表   -->
@@ -40,6 +40,11 @@
             (#{user.id}, #{roleId})
         </foreach>
     </insert>
+
+    <!-- 通过角色id查找用户数   -->
+    <select id="getUsersCountByRoleId" parameterType="int" resultType="int">
+        select count(*) from user_role where role_id = #{roleId}
+    </select>
 
 
 </mapper>

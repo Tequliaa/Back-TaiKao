@@ -9,7 +9,7 @@
         #{name},
         #{permissionCode},
         #{comment},
-        Now()
+        Now())
     </insert>
 
     <!-- 删除权限 -->

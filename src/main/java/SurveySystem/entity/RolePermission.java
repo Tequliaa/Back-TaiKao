@@ -13,6 +13,7 @@ public class RolePermission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     private int roleId;
+    private int permissionId;
     private String permissionCode;
     private Timestamp createdTime;
 }

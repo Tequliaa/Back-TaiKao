@@ -4,6 +4,7 @@ import SurveySystem.entity.Role;
 import SurveySystem.entity.User;
 import SurveySystem.mapper.RoleMapper;
 import SurveySystem.service.RoleService;
+import SurveySystem.service.UserRoleService;
 import SurveySystem.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,9 @@ public class RoleServiceImpl implements RoleService {
     private RoleMapper roleMapper;
 
     @Autowired
+    private UserRoleService userRoleService;
+
+    @Autowired
     private UserService userService;
 
     @Override
@@ -27,9 +31,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void deleteRoleById(int id) {
-        long count = userService.getUsersByRoleId(id);
+        long count = userRoleService.getUsersCountByRoleId(id);
         if(count>0){
-            throw new RuntimeException("该角色下有用户，请先删除用户");
+            throw new RuntimeException("该角色下有用户，请先删除用户.");
         }
         roleMapper.deleteRoleById(id);
     }

@@ -13,5 +13,6 @@ public class Permission {
     private int id;
     private String name;
     private String permissionCode;
+    private String comment;
     private Timestamp createdTime;
 }

@@ -14,8 +14,20 @@ public class RolePermissionServiceImpl implements RolePermissionService {
     @Autowired
     private RolePermissionMapper rolePermissionMapper;
     @Override
-    public int insertRolePermission(RolePermission rolePermission) {
-        return rolePermissionMapper.insertRolePermission(rolePermission);
+    public void assignRolePermission(int roleId,List<Integer> permissionIds) {
+        //首先将原有权限删除掉
+        List<Permission> permissions = rolePermissionMapper.getPermissionsByRoleId(roleId);
+        if(permissions!=null&&permissions.size()>0){
+            rolePermissionMapper.deleteRolePermissionByRoleId(roleId);
+        }
+
+        // 插入新权限
+        for(Integer permissionId:permissionIds){
+            RolePermission rolePermission = new RolePermission();
+            rolePermission.setRoleId(roleId);
+            rolePermission.setPermissionId(permissionId);
+            rolePermissionMapper.insertRolePermission(rolePermission);
+        }
     }
 
     @Override

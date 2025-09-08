@@ -22,11 +22,14 @@ public interface UserRoleMapper {
     void deleteUserRoleByUserId(int userId);
 
     //通过用户查找角色列表
-    List<Role> getRolesByUserId(int userId);
+    List<Integer> getRoleIdsByUserId(int userId);
 
     //通过角色id查找用户列表
     List<User> getUsersByRoleId(int roleId);
 
     //为对应部门下的用户赋角色。
     void addRolesToDepartment(List<User> users,int roleId);
+
+    //根据角色id查询用户数
+    int getUsersCountByRoleId(int roleId);
 }

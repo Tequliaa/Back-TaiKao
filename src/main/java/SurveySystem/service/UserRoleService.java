@@ -27,8 +27,11 @@ public interface UserRoleService {
     void deleteUserRoleByUserId(int userId);
 
     //通过用户查找角色列表
-    List<Role> getRolesByUserId(int userId);
+    List<Integer> getRolesByUserId(int userId);
 
     //通过角色id查找用户列表
     List<User> getUsersByRoleId(int roleId);
+
+    //根据角色id查询用户数
+    int getUsersCountByRoleId(int roleId);
 }

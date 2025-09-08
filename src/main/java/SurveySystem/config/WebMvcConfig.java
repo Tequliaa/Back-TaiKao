@@ -21,6 +21,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
                 .excludePathPatterns(
                         "/user/login",
                         "/user/logout",
+                        "/user/register",
                         "/captcha/generate",
                         "/captcha/verify"
                 );

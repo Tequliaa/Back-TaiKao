@@ -34,7 +34,6 @@
             u.username,
             u.password,
             u.salt,
-            u.role,
             u.department_id AS departmentId,
             d.name AS departmentName,
             r.name AS roleName
@@ -53,7 +52,6 @@
             u.username,
             u.password,
             u.salt,
-            u.role,
             u.department_id AS departmentId,
             d.name AS departmentName,
             r.name AS roleName
@@ -74,7 +72,7 @@
     <!-- 更新用户信息 -->
     <update id="updateUser" parameterType="User">
         UPDATE Users
-        SET department_id = #{departmentId}, role = #{role},name=#{name}
+        SET department_id = #{departmentId},name=#{name}
         WHERE id = #{id}
     </update>
 
@@ -89,7 +87,6 @@
             u.name,
             u.username,
             u.password,
-            u.role,
             r.name AS roleName,
             u.department_id AS departmentId,
             d.name AS departmentName
@@ -109,7 +106,6 @@
         u.name,
         u.username,
         u.password,
-        u.role,
         u.department_id AS departmentId,
         d.name AS departmentName,
         r.name AS roleName
@@ -153,12 +149,6 @@
                 AND (username LIKE CONCAT('%', #{keyword}, '%') OR role LIKE CONCAT('%', #{keyword}, '%'))
             </if>
         </where>
-    </select>
-
-    <select id="getUsersByRoleId" resultType="long">
-        SELECT count(*)
-        FROM Users u
-        where role_id = #{roleId}
     </select>
 
 </mapper>

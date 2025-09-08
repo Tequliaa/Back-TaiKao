@@ -2,12 +2,15 @@ package SurveySystem.controller;
 
 import SurveySystem.context.BaseContext;
 import SurveySystem.entity.*;
+import SurveySystem.entity.dto.UserDTO;
+import SurveySystem.entity.vo.UserInfoVO;
 import SurveySystem.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,6 +39,12 @@ public class UserController {
     private final DepartmentSurveyService departmentSurveyService;
     private final UserSurveyService userSurveyService;
     private final UserRoleService userRoleService;
+    @Autowired
+    private PermissionService permissionService;
+    @Autowired
+    private RolePermissionService rolePermissionService;
+    @Autowired
+    private RoleService roleService;
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -142,12 +151,35 @@ public class UserController {
      * @return
      */
     @GetMapping("/info")
-    public Result<User> getUserInfo() {
+    public Result<UserInfoVO> getUserInfo() {
         int userId = BaseContext.getCurrentId();
         log.info("当前用户id：" + userId);
         User user = userService.getUserByUserId(userId);
-        return Result.success(user);
+        UserInfoVO userVo = new UserInfoVO();
+        BeanUtils.copyProperties(user,userVo);
+        //todo 目前用户和角色是多对一 后续可拓展
+        List<Integer> roleIds = userRoleService.getRolesByUserId(userId);
+        List<String> codes = new ArrayList<>();
+        for(int roleId:roleIds){
+            codes = rolePermissionService.getPermissionCodesByRoleId(roleId);
+        }
+        userVo.setPermissionCodes(codes);
+        return Result.success(userVo);
     }
+
+
+    @RequestMapping("/checkPermission")
+    public Result checkPermission(@RequestParam int userId,@RequestParam String permissionCode) {
+        String roleName = userService.getUserByUserId(userId).getRoleName();
+        int roleId = roleService.getRoleByName(roleName).getId();
+        List<String> permissionCodes = rolePermissionService.getPermissionCodesByRoleId(roleId);
+        if(permissionCodes.contains(permissionCode)){
+            return Result.success("true");
+        }else{
+            return Result.error("角色无对应权限。");
+        }
+    }
+
 
     //------------------------ 修改密码 ------------------------
     @PostMapping("/updatePassword")
@@ -183,8 +215,17 @@ public class UserController {
 
     //------------------------ 修改用户信息 ------------------------
     @PutMapping("/update")
-    public Result<Void> updateUser(@RequestBody User user) {
+    public Result<Void> updateUser(@RequestBody UserDTO userDTO) {
+        User user = new User();
+        BeanUtils.copyProperties(userDTO,user);
         userService.updateUser(user);
+
+        //调整用户的角色
+        UserRole userRole = new UserRole();
+        userRole.setRoleId(Integer.parseInt(userDTO.getRole()));
+        userRole.setUserId(user.getId());
+        userRoleService.insertUserRole(userRole);
+
         return Result.success();
     }
 

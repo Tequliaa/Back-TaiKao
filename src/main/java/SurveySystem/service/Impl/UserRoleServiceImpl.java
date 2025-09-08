@@ -51,12 +51,17 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
-    public List<Role> getRolesByUserId(int userId) {
-        return userRoleMapper.getRolesByUserId(userId);
+    public List<Integer> getRolesByUserId(int userId) {
+        return userRoleMapper.getRoleIdsByUserId(userId);
     }
 
     @Override
     public List<User> getUsersByRoleId(int roleId) {
         return userRoleMapper.getUsersByRoleId(roleId);
+    }
+
+    @Override
+    public int getUsersCountByRoleId(int roleId) {
+        return userRoleMapper.getUsersCountByRoleId(roleId);
     }
 }

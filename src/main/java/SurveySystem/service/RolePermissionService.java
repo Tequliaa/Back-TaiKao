@@ -9,10 +9,10 @@ import java.util.List;
 public interface RolePermissionService {
     /**
      * 添加权限
-     * @param rolePermission
+     * @param roleId permissionIds
      * @return
      */
-    int insertRolePermission(RolePermission rolePermission);
+    void assignRolePermission(int roleId,List<Integer> permissionIds);
 
     /**
      * 删除某条权限
