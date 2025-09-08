@@ -1,0 +1,29 @@
+package SurveySystem.mapper;
+
+import SurveySystem.entity.Role;
+import SurveySystem.entity.User;
+import SurveySystem.entity.UserRole;
+import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
+
+@Mapper
+public interface UserRoleMapper {
+    //新增用户-角色关系
+    int insertUserRole(UserRole userRole);
+
+    //删除用户-角色关系
+    void deleteUserRole(UserRole userRole);
+
+    //删除用户-角色关系
+    void deleteUserRoleById(int id);
+
+    //清空某个用户的角色
+    void deleteUserRoleByUserId(int userId);
+
+    //通过用户查找角色列表
+    List<Role> getRolesByUserId(int userId);
+
+    //通过角色id查找用户列表
+    List<User> getUsersByRoleId(int roleId);
+}

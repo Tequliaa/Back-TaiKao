@@ -45,10 +45,13 @@ mybatis:
   type-aliases-package: SurveySystem.entity
   configuration:
     map-underscore-to-camel-case: true
+    # 新增：打印SQL语句到控制台
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   mapper-scan:
     base-package: SurveySystem.mapper
 
 
 jwt:
   secret: debiaofan
-  expiration: 2592000
+  expiration: 3600
+  rememberExpiration: 2592000

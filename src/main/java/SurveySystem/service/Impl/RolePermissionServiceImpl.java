@@ -1,0 +1,45 @@
+package SurveySystem.service.Impl;
+
+import SurveySystem.entity.Permission;
+import SurveySystem.entity.RolePermission;
+import SurveySystem.mapper.RolePermissionMapper;
+import SurveySystem.service.RolePermissionService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class RolePermissionServiceImpl implements RolePermissionService {
+    @Autowired
+    private RolePermissionMapper rolePermissionMapper;
+    @Override
+    public int insertRolePermission(RolePermission rolePermission) {
+        return rolePermissionMapper.insertRolePermission(rolePermission);
+    }
+
+    @Override
+    public void deleteRolePermissionById(int id) {
+        rolePermissionMapper.deleteRolePermissionById(id);
+    }
+
+    @Override
+    public void deleteRolePermissionByRoleId(int id) {
+        rolePermissionMapper.deleteRolePermissionByRoleId(id);
+    }
+
+    @Override
+    public List<Permission> getPermissionsByRoleId(int roleId) {
+        return rolePermissionMapper.getPermissionsByRoleId(roleId);
+    }
+
+    @Override
+    public List<Long> getPermissionIdsByRoleId(int roleId) {
+        return rolePermissionMapper.getPermissionIdsByRoleId(roleId);
+    }
+
+    @Override
+    public List<String> getPermissionCodesByRoleId(int roleId) {
+        return rolePermissionMapper.getPermissionCodesByRoleId(roleId);
+    }
+}

@@ -134,8 +134,4 @@
             </if>
         </where>
     </select>
-
-    <update id="updateSurveyTimestamp" parameterType="int">
-        UPDATE surveys SET updated_at = NOW() WHERE survey_id = #{surveyId}
-    </update>
 </mapper>

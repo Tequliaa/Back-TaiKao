@@ -109,9 +109,12 @@
         u.password,
         u.role,
         u.department_id AS departmentId,
-        d.name AS departmentName
+        d.name AS departmentName,
+        r.name AS roleName
         FROM Users u
         LEFT JOIN Departments d ON u.department_id = d.id
+        left join user_role ur on u.id=ur.user_id
+        left join role r on ur.role_id=r.id
         <where>
             <choose>
                 <when test="departmentId != 0">
@@ -148,6 +151,12 @@
                 AND (username LIKE CONCAT('%', #{keyword}, '%') OR role LIKE CONCAT('%', #{keyword}, '%'))
             </if>
         </where>
+    </select>
+
+    <select id="getUsersByRoleId" resultType="long">
+        SELECT count(*)
+        FROM Users u
+        where role_id = #{roleId}
     </select>
 
 </mapper>

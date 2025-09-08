@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SurveySystem.mapper.PermissionMapper">
+
+    <!--  新增权限  -->
+    <insert id="insertPermission" parameterType="Permission" useGeneratedKeys="true" keyProperty="id">
+        insert into permission (name, permission_code, comment, create_time)
+        VALUES (
+        #{name},
+        #{permissionCode},
+        #{comment},
+        Now()
+    </insert>
+
+    <!-- 删除权限 -->
+    <delete id="deletePermissionById" parameterType="int">
+        DELETE FROM permission WHERE id = #{id}
+    </delete>
+
+    <!-- 通过权限码查找权限 -->
+    <select id="getPermissionByCode" parameterType="String" resultType="Permission">
+        select * from permission where permission_code = #{code}
+    </select>
+
+    <!-- 通过权限id查找权限   -->
+    <select id="getPermissionById" parameterType="int" resultType="Permission">
+        select * from permission where id = #{id}
+    </select>
+
+    <!-- 更新权限内容 -->
+    <update id="updatePermission" parameterType="Permission">
+        UPDATE permission
+        <set>
+            <if test="name != null">name=#{name},</if>
+            <if test="permissionCode != null">permission_code=#{permissionCode},</if>
+            <if test="comment != null">comment=#{comment}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 获取所有权限 -->
+    <select id="getAllPermissions" resultType="Permission">
+        SELECT *
+        FROM permission
+    </select>
+
+    <!-- 分页查询权限 -->
+    <!--  todo 后续需要加多重搜索条件  -->
+    <select id="getPermissionsByPage" resultType="Permission">
+        SELECT *
+        FROM permission
+        WHERE 1=1  <!-- 避免sql拼接错误 -->
+        <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 获取权限总数 -->
+    <select id="getPermissionCount" resultType="int">
+        SELECT COUNT(*) FROM permission
+            where 1=1
+        <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+    </select>
+
+</mapper>

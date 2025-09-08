@@ -75,4 +75,9 @@ public class UserServiceImpl implements UserService {
     public List<User> getUsersByDepartmentId(int departmentId) {
         return userMapper.getUsersByDepartmentId(departmentId);
     }
+
+    @Override
+    public long getUsersByRoleId(int roleId) {
+        return userMapper.getUsersByRoleId(roleId);
+    }
 }

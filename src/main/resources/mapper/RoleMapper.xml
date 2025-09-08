@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SurveySystem.mapper.RoleMapper">
+
+    <!--  新增角色  -->
+    <insert id="insertRole" parameterType="Role" useGeneratedKeys="true" keyProperty="id">
+        insert into role (name,comment) values (#{name},#{comment})
+    </insert>
+
+    <!-- 删除角色 -->
+    <delete id="deleteRoleById" parameterType="int">
+        DELETE FROM role WHERE id = #{id}
+    </delete>
+
+    <!-- 通过角色名查找角色 -->
+    <select id="getRoleByName" parameterType="String" resultType="Role">
+        select * from role where name = #{name}
+    </select>
+
+    <!-- 通过角色id查找角色   -->
+    <select id="getRoleById" parameterType="String" resultType="Role">
+        select * from role where name = #{name}
+    </select>
+
+    <!-- 更新用户信息 -->
+    <update id="updateRole" parameterType="Role">
+        UPDATE role
+        SET name=#{name}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 分页查询角色 -->
+    <select id="getAllRoles" resultType="Role">
+        SELECT *
+        FROM role
+    </select>
+
+    <!-- 分页查询角色 -->
+    <select id="getRolesByPage" resultType="Role">
+        SELECT *
+        FROM role
+        WHERE 1=1  <!-- 避免sql拼接错误 -->
+        <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 获取角色总数 -->
+    <select id="getRoleCount" resultType="int">
+        SELECT COUNT(*) FROM role
+            where 1=1
+        <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+    </select>
+
+</mapper>

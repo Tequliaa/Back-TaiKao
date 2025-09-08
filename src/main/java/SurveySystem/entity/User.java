@@ -17,5 +17,6 @@ public class User {
     private String departmentName;
     private String salt;
     private String role;
+    private String roleName;
 
 }

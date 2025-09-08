@@ -2,10 +2,7 @@ package SurveySystem.controller;
 
 import SurveySystem.context.BaseContext;
 import SurveySystem.entity.*;
-import SurveySystem.service.DepartmentService;
-import SurveySystem.service.DepartmentSurveyService;
-import SurveySystem.service.UserService;
-import SurveySystem.service.UserSurveyService;
+import SurveySystem.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -38,17 +35,19 @@ public class UserController {
     public final DepartmentService departmentService;
     private final DepartmentSurveyService departmentSurveyService;
     private final UserSurveyService userSurveyService;
+    private final UserRoleService userRoleService;
     @Autowired
     private JwtUtil jwtUtil;
 
     // 依赖注入（替代手动 new 和 init()）
     public UserController(UserService userService,DepartmentService departmentService,
                           DepartmentSurveyService departmentSurveyService,
-                          UserSurveyService userSurveyService) {
+                          UserSurveyService userSurveyService,UserRoleService userRoleService) {
         this.userService = userService;
         this.departmentService = departmentService;
         this.departmentSurveyService = departmentSurveyService;
         this.userSurveyService = userSurveyService;
+        this.userRoleService = userRoleService;
     }
 
     //------------------------ 用户列表查询 ------------------------
@@ -72,7 +71,8 @@ public class UserController {
     //------------------------ 用户登录 ------------------------
     @PostMapping("/login")
     public Result<String> login(@RequestParam String username,
-                                @RequestParam String password) {
+                                @RequestParam String password,
+                                @RequestParam(required = false, defaultValue = "false") Boolean rememberMe) {
 
         User loginUser = userService.getUserByUsername(username);
         if (loginUser == null) {
@@ -83,17 +83,19 @@ public class UserController {
             return Result.error("密码错误");
         }
 
-        // 生成 JWT Token
-        String token = jwtUtil.generateToken((long) loginUser.getId());
+        // 选择过期时间
+        long ttlSeconds = Boolean.TRUE.equals(rememberMe) ? jwtUtil.getRememberExpiration() : jwtUtil.getExpiration();
+
+        // 生成 JWT Token（携带自定义过期时间）
+        String token = jwtUtil.generateToken((long) loginUser.getId(), ttlSeconds);
         User user = userService.getUserByUserId(loginUser.getId());
 
-        // 正确转换User为Map
+        // 转为 Map
         ObjectMapper objectMapper = new ObjectMapper();
-        // 直接指定目标类型为 Map.class，Jackson 会自动转为 Map<String, Object>
         Map<String, Object> userInfo = objectMapper.convertValue(user, Map.class);
 
-        // 存储会话至redis内
-        jwtUtil.storeSessionInRedis(token, userInfo);
+        // 存储会话至 Redis（使用同样的 TTL）
+        jwtUtil.storeSessionInRedis(token, userInfo, ttlSeconds);
 
         return Result.success(token);
     }
@@ -190,6 +192,21 @@ public class UserController {
     @DeleteMapping("/delete")
     public Result<Void> deleteUser(@RequestParam int id) {
         userService.deleteUserById(id);
+        return Result.success();
+    }
+
+    //------------------------ 增加用户角色 ------------------------
+    //todo 目前为单个增加，后续可拓展为 用户和角色多对多
+    @RequestMapping ("/addRoles")
+    public Result<Void> addRoles(@RequestBody UserRole userRole) {
+        userRoleService.insertUserRole(userRole);
+        return Result.success();
+    }
+
+    //------------------------ 更新用户角色 ------------------------
+    @RequestMapping ("/updateRoles")
+    public Result<Void> updateRoles(@RequestBody UserRole userRole) {
+        userRoleService.updateUserRole(userRole);
         return Result.success();
     }
 

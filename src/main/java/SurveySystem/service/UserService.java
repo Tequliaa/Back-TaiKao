@@ -18,4 +18,6 @@ public interface UserService {
     // 获取用户总数
     int getUserCount(String keyword,int departmentId,int userId);
     List<User> getUsersByDepartmentId(int departmentId); //根据部门ID获取用户信息
+
+    long getUsersByRoleId(int roleId);
 }

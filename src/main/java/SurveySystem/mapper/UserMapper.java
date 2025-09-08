@@ -18,4 +18,7 @@ public interface UserMapper {
     // 获取用户总数
     int getUserCount(String keyword,int departmentId,int userId);
     List<User> getUsersByDepartmentId(int departmentId); //根据部门ID获取用户信息
+
+    // 查看某角色下是否有用户
+    Long getUsersByRoleId(int roleId);
 }

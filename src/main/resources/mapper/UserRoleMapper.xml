@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SurveySystem.mapper.UserRoleMapper">
+
+    <!--  新增用户-角色关系  -->
+    <insert id="insertUserRole" parameterType="userRole" useGeneratedKeys="true" keyProperty="id">
+        insert into user_role (user_id,role_id) values (#{userId},#{roleId})
+    </insert>
+
+    <!-- 删除用户-角色关系 -->
+    <delete id="deleteUserRole" parameterType="int">
+        DELETE FROM user_role WHERE user_id = #{id} and role_id = #{roleId}
+    </delete>
+
+    <!-- 删除用户-角色关系 -->
+    <delete id="deleteUserRoleById" parameterType="int">
+        DELETE FROM user_role WHERE id = #{id}
+    </delete>
+
+    <!-- 清空某个用户的角色 -->
+    <delete id="deleteUserRoleByUserId" parameterType="int">
+        DELETE FROM user_role WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 通过用户查找角色列表 -->
+    <select id="getRolesByUserId" parameterType="int" resultType="Role">
+        select * from user_role where user_id = #{userId}
+    </select>
+
+    <!-- 通过角色id查找用户列表   -->
+    <select id="getUsersByRoleId" parameterType="int" resultType="User">
+        select * from user_role where role_id = #{roleId}
+    </select>
+
+</mapper>
