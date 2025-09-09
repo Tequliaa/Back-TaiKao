@@ -1,11 +1,15 @@
 package SurveySystem.controller;
 
+import SurveySystem.config.RedisBloomFilter;
 import SurveySystem.entity.*;
 import SurveySystem.entity.vo.OptionAnalysisVO;
 import SurveySystem.entity.vo.QuestionAnalysisVO;
 import SurveySystem.service.*;
 import SurveySystem.utils.IpUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RestController
@@ -37,6 +42,22 @@ public class ResponseController {
         this.optionService = optionService;
         this.userSurveyService = userSurveyService;
     }
+
+    // 注入RedisTemplate（Spring Data Redis提供的Redis操作工具）
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    // 1. 复用问卷详情的缓存Key前缀（与getSurveyById接口保持一致）
+    private static final String SURVEY_DETAIL_KEY_PREFIX = "survey:detail:";
+    // 2. 答题详情接口独有的缓存Key前缀（存储该接口特有的数据）
+    // 格式：response:details:{surveyId}:{userId}（仅存userSurvey和questionIndexMap）
+    private static final String RESPONSE_DETAILS_KEY_PREFIX = "response:details:";
+
+    // 缓存过期时间（与问卷详情缓存保持一致，便于管理）
+    private static final long CACHE_EXPIRE_SECONDS = 3600;
+    // 空结果缓存时间（5分钟，防穿透）
+    private static final long EMPTY_CACHE_EXPIRE_SECONDS = 300;
+    @Autowired
+    private RedisBloomFilter redisBloomFilter;
 
     /**
      * 答题列表
@@ -71,40 +92,116 @@ public class ResponseController {
     }
 
     /**
-     * 用户答题详情
-     * @param surveyId
-     * @param userId
-     * @return
+     * 用户答题详情接口
      */
     @GetMapping("/details")
     public Result<Map<String, Object>> getResponseDetails(
             @RequestParam int surveyId,
             @RequestParam int userId) {
         System.out.println("这里是response的details");
+
+        if(!redisBloomFilter.mightContain(surveyId)){
+            return Result.error("数据库内无该问卷数据。");
+        }
+
+        // 缓存Key定义
+        String surveyCacheKey = SURVEY_DETAIL_KEY_PREFIX + surveyId;
+        String responseCacheKey = RESPONSE_DETAILS_KEY_PREFIX + surveyId + ":" + userId;
+        HashOperations<String, String, Object> hashOps = redisTemplate.opsForHash();
+
         try {
+            // 1. 获取问卷基础数据（survey和questions）
+            // 1.1 先查缓存
+            Object survey = null;
+            List<Question> questions = null;
+            boolean isSurveyCacheValid = false;
+
+            if (redisTemplate.hasKey(surveyCacheKey)) {
+                survey = hashOps.get(surveyCacheKey, "survey");
+                questions = (List<Question>) hashOps.get(surveyCacheKey, "questions");
+
+                // 验证缓存有效性
+                if (!ObjectUtils.isEmpty(survey) && !ObjectUtils.isEmpty(questions) && !questions.isEmpty()) {
+                    isSurveyCacheValid = true;
+                }
+            }
+
+            // 1.2 缓存无效则查数据库并更新缓存
+            if (!isSurveyCacheValid) {
+                // 从数据库读取
+                survey = surveyService.getSurveyById(surveyId);
+                questions = questionService.getQuestionsBySurveyId(surveyId);
+                for (Question question : questions) {
+                    List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
+                    question.setOptions(options);
+                }
+
+                // 数据库也无数据
+                if (ObjectUtils.isEmpty(survey) || ObjectUtils.isEmpty(questions)) {
+                    hashOps.put(surveyCacheKey, "survey", null);
+                    hashOps.put(surveyCacheKey, "questions", Collections.emptyList());
+                    redisTemplate.expire(surveyCacheKey, EMPTY_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS);
+                    return Result.error("问卷不存在或无问题数据");
+                }
+
+                // 更新缓存
+                hashOps.put(surveyCacheKey, "survey", survey);
+                hashOps.put(surveyCacheKey, "questions", questions);
+                redisTemplate.expire(surveyCacheKey, CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS);
+            }
+
+            // 2. 获取答题详情独有的数据
+            // 2.1 先查缓存
+            Object userSurvey = null;
+            Map<Integer, Integer> questionIndexMap = null;
+            boolean isResponseCacheValid = false;
+
+            if (redisTemplate.hasKey(responseCacheKey)) {
+                userSurvey = hashOps.get(responseCacheKey, "userSurvey");
+                questionIndexMap = (Map<Integer, Integer>) hashOps.get(responseCacheKey, "questionIndexMap");
+
+                if (!ObjectUtils.isEmpty(userSurvey) && !ObjectUtils.isEmpty(questionIndexMap)) {
+                    isResponseCacheValid = true;
+                }
+            }
+
+            // 2.2 缓存无效则查数据库并更新缓存
+            if (!isResponseCacheValid) {
+                userSurvey = userSurveyService.getUserSurveyByUserIdAndSurveyId(userId, surveyId);
+
+                // 构建问题索引Map
+                questionIndexMap = new HashMap<>();
+                for (int i = 0; i < questions.size(); i++) {
+                    questionIndexMap.put(questions.get(i).getQuestionId(), i + 1);
+                }
+
+                // 数据库无数据
+                if (ObjectUtils.isEmpty(userSurvey)) {
+                    hashOps.put(responseCacheKey, "userSurvey", null);
+                    hashOps.put(responseCacheKey, "questionIndexMap", Collections.emptyMap());
+                    redisTemplate.expire(responseCacheKey, EMPTY_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS);
+                    return Result.error("用户未参与该问卷");
+                }
+
+                // 更新缓存
+                hashOps.put(responseCacheKey, "userSurvey", userSurvey);
+                hashOps.put(responseCacheKey, "questionIndexMap", questionIndexMap);
+                redisTemplate.expire(responseCacheKey, CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS);
+            }
+
+            // 3. 获取实时数据（用户答题记录）
             List<Response> userResponses = responseService.getUserResponsesForSurvey(surveyId, userId);
-            UserSurvey userSurvey = userSurveyService.getUserSurveyByUserIdAndSurveyId(userId, surveyId);
-            List<Question> questions = questionService.getQuestionsBySurveyId(surveyId);
 
-            Map<Integer, Integer> questionIndexMap = new HashMap<>();
-            for (int i = 0; i < questions.size(); i++) {
-                questionIndexMap.put(questions.get(i).getQuestionId(), i + 1);
-            }
-
-            for (Question question : questions) {
-                List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
-                question.setOptions(options);
-            }
-            Survey survey = surveyService.getSurveyById(surveyId);
+            // 4. 组装结果
             Map<String, Object> resultMap = new HashMap<>();
-
-            resultMap.put("userResponses", userResponses);
-            resultMap.put("userSurvey", userSurvey);
-            resultMap.put("questions", questions);
-            resultMap.put("survey",survey);
-            resultMap.put("questionIndexMap", questionIndexMap);
+            resultMap.put("userResponses", userResponses); // 实时数据
+            resultMap.put("userSurvey", userSurvey);       // 缓存数据
+            resultMap.put("questions", questions);         // 缓存数据（复用问卷缓存）
+            resultMap.put("survey", survey);               // 缓存数据（复用问卷缓存）
+            resultMap.put("questionIndexMap", questionIndexMap); // 缓存数据
 
             return Result.success(resultMap);
+
         } catch (Exception e) {
             return Result.error("获取响应详情失败：" + e.getMessage());
         }
@@ -238,7 +335,6 @@ public class ResponseController {
 
             // 完成问卷
             completeSurvey(surveyId, userId, isSaveAction);
-
             return Result.success();
         } catch (Exception e) {
             return Result.error("提交响应失败：" + e.getMessage());

@@ -47,4 +47,6 @@ public interface RolePermissionMapper {
      * @return
      */
     List<String> getPermissionCodesByRoleId(int roleId);
+
+    List<String> getRoleIdsByPermissionId(int permissionId);
 }

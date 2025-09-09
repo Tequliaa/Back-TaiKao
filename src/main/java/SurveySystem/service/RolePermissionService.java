@@ -46,4 +46,11 @@ public interface RolePermissionService {
      * @return
      */
     List<String> getPermissionCodesByRoleId(int roleId);
+
+    /**
+     * 根据权限id查询角色id列表
+     * @param permissionId
+     * @return
+     */
+    List<String> getRoleIdsByPermissionId(int permissionId);
 }

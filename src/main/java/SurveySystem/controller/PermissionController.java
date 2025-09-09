@@ -59,6 +59,16 @@ public class PermissionController {
         return Result.success();
     }
 
+    //删除权限
+    @RequestMapping ("/delete")
+    public Result<Void> deletePermission(@RequestParam int id) {
+        if(permissionService.deletePermissionById(id))
+            return Result.success();
+        else{
+            return Result.error("删除权限失败，有角色拥有该权限，请查验。");
+        }
+    }
+
 
     // 获取所有权限
     @RequestMapping("/getAllPermissions")

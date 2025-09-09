@@ -1,8 +1,10 @@
 package SurveySystem.service.Impl;
 
 import SurveySystem.entity.Permission;
+import SurveySystem.entity.Role;
 import SurveySystem.mapper.PermissionMapper;
 import SurveySystem.service.PermissionService;
+import SurveySystem.service.RolePermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,8 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Autowired
     private PermissionMapper permissionMapper;
+    @Autowired
+    private RolePermissionService rolePermissionService;
 
     @Override
     public int insertPermission(Permission permission) {
@@ -20,8 +24,14 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public void deletePermissionById(int id) {
+    public Boolean deletePermissionById(int id) {
+        //检查是否有其他角色在用此权限。
+        List<String> roleIds = rolePermissionService.getRoleIdsByPermissionId(id);
+        if(roleIds!=null&&roleIds.size()>0){
+            return false;
+        }
         permissionMapper.deletePermissionById(id);
+        return true;
     }
 
     @Override

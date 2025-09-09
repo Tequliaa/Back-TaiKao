@@ -1,5 +1,6 @@
 package SurveySystem.service.Impl;
 
+import SurveySystem.annotation.CacheUpdate;
 import SurveySystem.mapper.ResponseMapper;
 import SurveySystem.entity.Response;
 import SurveySystem.entity.vo.OptionAnalysisVO;
@@ -30,26 +31,40 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
+    @CacheUpdate(prefix = "response:details:",
+            keyParams = {"surveyId","userId"},
+            separator = ":")
     public void saveResponses(List<Response> responses) {
         responseMapper.saveResponses(responses);
     }
 
     @Override
+    @CacheUpdate(prefix = "response:details:",
+            keyParams = {"surveyId","userId"},
+            separator = ":")
     public void resetIsValidForResponses(int userId, int surveyId) {
         responseMapper.resetIsValidForResponses(userId,surveyId);
     }
-
     @Override
+    @CacheUpdate(prefix = "response:details:",
+            keyParams = {"surveyId","userId"},
+            separator = ":")
     public void updateResponse(Response response) {
         responseMapper.updateResponse(response);
     }
 
     @Override
+    @CacheUpdate(prefix = "response:details:",
+            keyParams = {"surveyId","userId"},
+            separator = ":")
     public void updateFileValid(Response response) {
         responseMapper.updateFileValid(response);
     }
 
     @Override
+    @CacheUpdate(prefix = "response:details:",
+            keyParams = {"surveyId","userId"},
+            separator = ":")
     public void updateResponseData(Response response) {
         responseMapper.updateResponseData(response);
     }
@@ -71,6 +86,9 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
+    @CacheUpdate(prefix = "response:details:",
+            keyParams = {"surveyId","userId"},
+            separator = ":")
     public void saveFilePathToDatabase(Response response) {
         responseMapper.saveFilePathToDatabase(response);
     }
@@ -81,6 +99,9 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
+    @CacheUpdate(prefix = "response:details:",
+            keyParams = {"surveyId","userId"},
+            separator = ":")
     public void resetIsValidForResponsesExcludingIds(int userId, int surveyId, Set<Integer> excludedIds) {
         responseMapper.resetIsValidForResponsesExcludingIds(userId,surveyId,excludedIds);
     }

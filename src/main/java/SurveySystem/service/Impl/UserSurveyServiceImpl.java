@@ -1,5 +1,6 @@
 package SurveySystem.service.Impl;
 
+import SurveySystem.annotation.CacheUpdate;
 import SurveySystem.mapper.UserSurveyMapper;
 import SurveySystem.entity.DepartmentSurvey;
 import SurveySystem.entity.User;
@@ -55,12 +56,18 @@ public class UserSurveyServiceImpl implements UserSurveyService {
     }
 
     @Override
+    @CacheUpdate(prefix = "response:details:",
+            keyParams = {"surveyId","userId"},
+            separator = ":")
     public boolean updateSurveyStatus(int id, String status, Timestamp completedAt) {
         System.out.println("到服务层实现了");
         return userSurveyMapper.updateSurveyStatus(id,status,completedAt);
     }
 
     @Override
+    @CacheUpdate(prefix = "response:details:",
+            keyParams = {"surveyId","userId"},
+            separator = ":")
     public boolean updateSurveyStatusBySurveyAndUser(int surveyId, int userId, String status, Timestamp completedAt) {
         return userSurveyMapper.updateSurveyStatusBySurveyAndUser(surveyId,userId,status,completedAt);
     }

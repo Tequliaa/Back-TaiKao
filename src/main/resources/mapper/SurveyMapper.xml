@@ -8,6 +8,11 @@
         SELECT * FROM surveys WHERE created_by = #{userId}
     </select>
 
+
+    <select id="getAllSurveyIds" resultType="Integer">
+        SELECT * FROM surveys
+    </select>
+
     <select id="getSurveyById" resultType="Survey">
         SELECT * FROM surveys WHERE survey_id = #{surveyId}
     </select>

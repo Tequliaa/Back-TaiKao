@@ -41,4 +41,9 @@
         where rp.role_id = #{roleId}
     </select>
 
+    <!--  通过权限id 查询角色id列表   -->
+    <select id="getRoleIdsByPermissionId" parameterType="String" resultType="String">
+        select role_id from role_permission where permission_id = #{permissionId}
+    </select>
+
 </mapper>

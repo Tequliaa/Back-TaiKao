@@ -7,7 +7,7 @@ import java.util.List;
 public interface PermissionService {
     int insertPermission(Permission permission);
 
-    void deletePermissionById(int id);
+    Boolean deletePermissionById(int id);
 
     Permission getPermissionByCode(String code);
 

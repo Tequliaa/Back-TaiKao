@@ -7,6 +7,7 @@ import java.util.List;
 @Mapper
 public interface SurveyMapper {
     List<Survey> getAllSurveys(int userId);
+    List<Integer> getAllSurveyIds();
     Survey getSurveyById(int surveyId);
     List<Survey> getSurveysByPage(int offset, int pageSize,String keyword, int userId, String role);
     int getSurveyCount(int userId,String keyword, String role);

@@ -1,22 +1,28 @@
 package SurveySystem.controller;
 
 
+import SurveySystem.config.RedisBloomFilter;
 import SurveySystem.entity.*;
 import SurveySystem.entity.dto.SurveyDTO;
 import SurveySystem.service.CategoryService;
 import SurveySystem.service.OptionService;
 import SurveySystem.service.QuestionService;
 import SurveySystem.service.SurveyService;
+import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/survey")
 public class SurveyController {
-
     private final SurveyService surveyService;
     private final QuestionService questionService;
     private final OptionService optionService;
@@ -30,7 +36,19 @@ public class SurveyController {
         this.optionService = optionService;
         this.categoryService = categoryService;
     }
+    @Autowired
+    private RedisBloomFilter bloomFilter;
 
+    // 注入RedisTemplate（Spring Data Redis提供的Redis操作工具）
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    // 缓存Key前缀（统一管理，避免硬编码）
+    private static final String SURVEY_DETAIL_KEY_PREFIX = "survey:detail:";
+    // 缓存过期时间（建议30分钟-2小时，根据问卷更新频率调整，这里设1小时）
+    private static final long CACHE_EXPIRE_SECONDS = 3600;
+
+    @Autowired
+    private RedisBloomFilter redisBloomFilter;
 
     /**
      * 获取问卷列表
@@ -69,21 +87,59 @@ public class SurveyController {
     }
 
     /**
-     * 获取问卷详情
-     * @param surveyId
-     * @return
+     * 获取问卷详情接口
      */
     @GetMapping("/getSurveyAndQuestionsById")
     public Result<Map<String, Object>> getSurveyById(@RequestParam int surveyId) {
+        if(!redisBloomFilter.mightContain(surveyId)){
+            return Result.error("数据库内无该问卷数据。");
+        }
+
+        String cacheKey = SURVEY_DETAIL_KEY_PREFIX + surveyId;
+        HashOperations<String, String, Object> hashOps = redisTemplate.opsForHash();
+
+        // 1. 先查缓存
+        if (redisTemplate.hasKey(cacheKey)) {
+            Object cachedSurvey = hashOps.get(cacheKey, "survey");
+            Object cachedQuestions = hashOps.get(cacheKey, "questions");
+
+            if (cachedSurvey == null) {
+                return Result.error("问卷不存在");
+            }
+
+            if (!ObjectUtils.isEmpty(cachedSurvey) && !ObjectUtils.isEmpty(cachedQuestions)) {
+                Map<String, Object> resultMap = new HashMap<>();
+                resultMap.put("survey", cachedSurvey);
+                resultMap.put("questions", cachedQuestions);
+                return Result.success(resultMap);
+            }
+        }
+
+        // 2. 缓存未命中，查数据库
         Survey survey = surveyService.getSurveyById(surveyId);
-        List<Question> questions=questionService.getQuestionsBySurveyId(surveyId);
-        for(Question question:questions){
-            List<Option> options= optionService.getOptionsByQuestionId(question.getQuestionId());
+        List<Question> questions = questionService.getQuestionsBySurveyId(surveyId);
+        for (Question question : questions) {
+            List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
             question.setOptions(options);
         }
+
+        // 3. 处理空结果
+        if (ObjectUtils.isEmpty(survey)) {
+            hashOps.put(cacheKey, "survey", null);
+            hashOps.put(cacheKey, "questions", Collections.emptyList());
+            redisTemplate.expire(cacheKey, 300, TimeUnit.SECONDS);
+            return Result.error("问卷不存在");
+        }
+
+        // 4. 更新缓存（供其他接口复用）
+        hashOps.put(cacheKey, "survey", survey);
+        hashOps.put(cacheKey, "questions", questions);
+        redisTemplate.expire(cacheKey, CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS);
+
+        // 5. 返回结果
         Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("survey",survey);
-        resultMap.put("questions",questions);
+        resultMap.put("survey", survey);
+        resultMap.put("questions", questions);
         return Result.success(resultMap);
     }
 
@@ -137,6 +193,11 @@ public class SurveyController {
         }
         //survey.setStatus("草稿");
         surveyService.updateSurvey(survey);
+
+        // 构造旧缓存Key，主动删除（让下次查询重新缓存新数据）
+        String cacheKey = SURVEY_DETAIL_KEY_PREFIX + survey.getSurveyId();
+        redisTemplate.delete(cacheKey);
+
         handleSurveyContent(questions,survey);
         return Result.success();
     }
@@ -248,6 +309,9 @@ public class SurveyController {
     @DeleteMapping("/delete")
     public Result<Void> deleteSurvey(@RequestParam int surveyId) {
         surveyService.deleteSurvey(surveyId);
+        // 删除问卷缓存
+        String cacheKey = SURVEY_DETAIL_KEY_PREFIX + surveyId;
+        redisTemplate.delete(cacheKey);
         return Result.success();
     }
 }
