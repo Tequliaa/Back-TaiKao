@@ -12,6 +12,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,6 +48,8 @@ public class UserController {
     private RoleService roleService;
     @Autowired
     private JwtUtil jwtUtil;
+    @Value("${role.default}")
+    private String defaultRole;
 
     // 依赖注入（替代手动 new 和 init()）
     public UserController(UserService userService,DepartmentService departmentService,
@@ -290,7 +293,7 @@ public class UserController {
                 row.createCell(1).setCellValue(user.getUsername());
                 row.createCell(2).setCellValue(user.getName());
                 row.createCell(3).setCellValue(user.getDepartmentName());
-                row.createCell(4).setCellValue(user.getRole());
+                row.createCell(4).setCellValue(user.getRoleName());
             }
 
             // 自动调整列宽
@@ -344,8 +347,6 @@ public class UserController {
                 String hashedPassword = HashUtils.hashPassword(defaultPassword, salt);
                 user.setPassword(hashedPassword);
                 user.setSalt(salt);
-
-                user.setRole("普通用户");
 
                 if(departmentName.isEmpty()||"".equals(departmentName)){
                     departmentName = getCellValueAsString(row.getCell(3)).trim(); // 部门名称
@@ -403,6 +404,11 @@ public class UserController {
             if(!userList.isEmpty()&&!departmentSurveys.isEmpty()){
                 userSurveyService.assignSurveysToUsers(userList,departmentSurveys);
             }
+
+            //对导入的用户批量分配角色
+            Role role = roleService.getRoleByName(defaultRole);
+            userRoleService.assignRolesToUsers(userList,role.getId());
+
             return Result.success(result);
         } catch (Exception e) {
             return Result.error("导入失败：" + e.getMessage());

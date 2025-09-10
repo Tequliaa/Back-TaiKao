@@ -24,6 +24,11 @@ public class UserRoleServiceImpl implements UserRoleService {
     }
 
     @Override
+    public int assignRolesToUsers(List<User> users, int roleId) {
+        return userRoleMapper.assignRolesToUsers(users,roleId);
+    }
+
+    @Override
     public int updateUserRole(UserRole userRole) {
         deleteUserRoleByUserId(userRole.getUserId());
         return userRoleMapper.insertUserRole(userRole);

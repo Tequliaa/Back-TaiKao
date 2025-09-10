@@ -16,7 +16,6 @@ public class User {
     private int departmentId;
     private String departmentName;
     private String salt;
-    private String role;
     private String roleName;
 
 }

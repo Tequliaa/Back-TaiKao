@@ -11,6 +11,8 @@ public interface UserRoleService {
     //新增用户-角色关系
     int insertUserRole(UserRole userRole);
 
+    int assignRolesToUsers(List<User> users,int roleId);
+
     //修改用户-角色关系
     int updateUserRole(UserRole userRole);
 

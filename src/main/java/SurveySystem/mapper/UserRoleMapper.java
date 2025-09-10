@@ -12,6 +12,9 @@ public interface UserRoleMapper {
     //新增用户-角色关系
     int insertUserRole(UserRole userRole);
 
+    //批量为用户新增角色
+    int assignRolesToUsers(List<User> users, int roleId);
+
     //删除用户-角色关系
     void deleteUserRole(UserRole userRole);
 

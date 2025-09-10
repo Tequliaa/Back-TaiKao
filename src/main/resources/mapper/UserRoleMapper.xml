@@ -7,6 +7,15 @@
         insert into user_role (user_id,role_id) values (#{userId},#{roleId})
     </insert>
 
+    <!-- 为用户批量分配角色 -->
+    <insert id="assignRolesToUsers">
+        INSERT IGNORE INTO user_role (user_id, role_id)
+        VALUES
+        <foreach collection="users" item="user" separator=",">
+                (#{user.id}, #{roleId})
+        </foreach>
+    </insert>
+
     <!-- 删除用户-角色关系 -->
     <delete id="deleteUserRole" parameterType="int">
         DELETE FROM user_role WHERE user_id = #{id} and role_id = #{roleId}

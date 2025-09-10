@@ -53,5 +53,10 @@ mybatis:
 
 jwt:
   secret: debiaofan
+#  常规两小时
   expiration: 3600
+#  记住我 7天
   rememberExpiration: 2592000
+
+role:
+  default: 普通用户
