@@ -34,7 +34,7 @@ public class JwtInterceptor implements HandlerInterceptor {
 
             // 验证token（本地会话检查）
             Result<Map<String, Object>> result = jwtUtil.checkToken(token);
-            if (result.getCode() != 0) {
+            if (result.getCode() != 200) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return false;
             }

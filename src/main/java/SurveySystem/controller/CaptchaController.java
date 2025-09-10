@@ -1,6 +1,7 @@
 package SurveySystem.controller;
 
 import SurveySystem.entity.CaptchaInfo;
+import SurveySystem.entity.Result;
 import SurveySystem.utils.CaptchaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -24,26 +25,20 @@ public class CaptchaController {
      * POST /captcha/generate
      */
     @PostMapping("/generate")
-    public Map<String, Object> generateCaptcha(@RequestBody(required = false) Map<String, String> params) {
-        Map<String, Object> result = new HashMap<>();
-        
+    public Result<Map<String, Object>> generateCaptcha(@RequestBody(required = false) Map<String, String> params) {
         try {
             String oldToken = params != null ? params.get("token") : null;
             CaptchaInfo captchaInfo = captchaService.generateCaptcha(oldToken);
-            
-            result.put("code", 0);
-            result.put("message", "验证码生成成功");
-            result.put("data", new HashMap<String, Object>() {{
-                put("token", captchaInfo.getToken());
-                put("imageBase64", captchaInfo.getImageBase64());
-            }});
+            Map<String,Object> data = new HashMap();
+            data.put("token",captchaInfo.getToken());
+            data.put("imageBase64",captchaInfo.getImageBase64());
+
+            return Result.success(data,"验证码生成成功");
             
         } catch (Exception e) {
-            result.put("code", 500);
-            result.put("message", "验证码生成失败: " + e.getMessage());
+            Result.error("验证码生成失败："+e.getMessage());
         }
-        
-        return result;
+        return Result.success();
     }
     
     /**
@@ -51,7 +46,7 @@ public class CaptchaController {
      * POST /captcha/verify
      */
     @PostMapping("/verify")
-    public Map<String, Object> verifyCaptcha(@RequestBody Map<String, String> params) {
+    public Result<Map<String, Object>> verifyCaptcha(@RequestBody Map<String, String> params) {
         Map<String, Object> result = new HashMap<>();
         
         try {
@@ -59,29 +54,23 @@ public class CaptchaController {
             String code = params.get("code");
             
             if (token == null || code == null) {
-                result.put("code", 400);
-                result.put("message", "参数不能为空");
-                return result;
+                return Result.error("参数不能为空");
             }
             
             boolean isValid = captchaService.verifyCaptcha(token, code);
             
             if (isValid) {
-                result.put("code", 0);
-                result.put("message", "验证码验证成功");
-                result.put("data", new HashMap<String, Object>() {{
-                    put("valid", true);
-                }});
+                Map<String,Object> data = new HashMap();
+                data.put("valid",true);
+                return Result.success(data);
             } else {
-                result.put("code", 501);
-                result.put("message", "验证码错误或已过期");
+                return Result.error(501,"验证码错误或已过期");
             }
             
         } catch (Exception e) {
-            result.put("code", 500);
-            result.put("message", "验证码验证失败: " + e.getMessage());
+            Result.error(500,"验证码验证失败: " + e.getMessage());
         }
-        
-        return result;
+
+        return Result.success();
     }
 }
