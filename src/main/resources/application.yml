@@ -60,3 +60,16 @@ jwt:
 
 role:
   default: 普通用户
+
+#接口文档
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: SurveySystem.controller

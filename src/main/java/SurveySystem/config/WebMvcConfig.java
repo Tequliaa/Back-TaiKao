@@ -1,14 +1,16 @@
 package SurveySystem.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class WebMvcConfig extends WebMvcConfigurationSupport {
+@Slf4j
+public class WebMvcConfig implements WebMvcConfigurer {
 
     @Autowired
     private JwtInterceptor jwtInterceptor;
@@ -19,17 +21,28 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
-                        "/user/login",
-                        "/user/logout",
-                        "/user/register",
-                        "/captcha/generate",
-                        "/captcha/verify"
+                        // 业务免鉴权路径
+                        "/user/login", "/user/logout", "/user/register",
+                        "/captcha/generate", "/captcha/verify",
+
+
+                        // OpenAPI 3.x + Knife4j 4.x 必须排除的路径
+                        "/doc.html",           // Knife4j 首页
+                        "/webjars/**",         // 静态资源
+                        "/v3/api-docs/**",     // OpenAPI 文档端点
+                        "/v3/api-docs",        // OpenAPI 文档端点（无后缀）
+                        "/swagger-resources",  // Swagger 资源
+                        "/swagger-resources/**", // Swagger 资源
+                        "/swagger-ui/**",      // Swagger UI
+                        "/swagger-ui.html",    // Swagger UI 页面
+                        "/error",              // 错误页面（重要！）
+                        "/favicon.ico"         // 网站图标
                 );
     }
 
-
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        log.info("开始设置静态资源映射...");
         String os = System.getProperty("os.name").toLowerCase();
         String uploadPath;
 
@@ -44,8 +57,8 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(uploadPath);
 
-        // 保留默认静态资源映射
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/");
+        registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+
     }
 }
