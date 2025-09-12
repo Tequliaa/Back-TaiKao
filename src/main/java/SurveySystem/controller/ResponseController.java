@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +30,9 @@ public class ResponseController {
     private final QuestionService questionService;
     private final OptionService optionService;
     private final UserSurveyService userSurveyService;
+
+    @Autowired
+    private QuestionAnalysisService questionAnalysisService;
 
     @Autowired
     public ResponseController(ResponseService responseService,
@@ -90,6 +94,37 @@ public class ResponseController {
             return Result.error("获取问卷响应列表失败：" + e.getMessage());
         }
     }
+
+    @GetMapping("/analysis")
+    public SseEmitter test(
+            @RequestParam(defaultValue = "0") int surveyId,
+            @RequestParam(defaultValue = "0") int departmentId
+    ) throws IOException {
+        List<Question> questions = questionService.getQuestionsBySurveyId(surveyId);
+        List<QuestionAnalysisVO> questionAnalysisVOList = new ArrayList<>();
+
+        for (Question question : questions) {
+            QuestionAnalysisVO questionAnalysisVO = new QuestionAnalysisVO();
+            questionAnalysisVO.setQuestionName(question.getDescription());
+            questionAnalysisVO.setQuestionType(question.getType());
+
+            List<Option> options = optionService.getOptionsWithCheckCountByQuestionId(question.getQuestionId(), departmentId);
+            List<OptionAnalysisVO> analysisOptions=new ArrayList<>();
+            options.forEach(option -> {
+                OptionAnalysisVO optionAnalysisVO=new OptionAnalysisVO();
+                optionAnalysisVO.setDescription(option.getDescription());
+                optionAnalysisVO.setCheckCount(option.getCheckCount());
+                //System.out.println("optionAnalysisVO "+optionAnalysisVO);
+                analysisOptions.add(optionAnalysisVO);
+            });
+            questionAnalysisVO.setOptions(analysisOptions);
+            questionAnalysisVOList.add(questionAnalysisVO);
+        }
+        SseEmitter emitter = new SseEmitter();
+        questionAnalysisService.getAnalysisDataStream(questionAnalysisVOList,emitter);
+        return emitter;
+    }
+
 
     /**
      * 用户答题详情接口
@@ -238,9 +273,9 @@ public class ResponseController {
                     //System.out.println("optionAnalysisVO "+optionAnalysisVO);
                     analysisOptions.add(optionAnalysisVO);
                 });
+                questionAnalysisVO.setOptions(analysisOptions);
                 questionAnalysisVOList.add(questionAnalysisVO);
                 question.setOptions(options);
-                questionAnalysisVO.setOptions(analysisOptions);
 
                 //if(question.getType().equals("排序")){
                 //    for(Option option:question.getOptions()){

@@ -23,7 +23,7 @@ import java.util.Map;
  */
 public class HttpClientUtil {
 
-    static final  int TIMEOUT_MSEC = 5 * 1000;
+    static final  int TIMEOUT_MSEC = 20 * 1000;
 
     /**
      * 发送GET方式请求
@@ -114,9 +114,9 @@ public class HttpClientUtil {
 
             // 设置请求配置（超时时间等）
             httpPost.setConfig(RequestConfig.custom()
-                    .setConnectTimeout(5000)
-                    .setConnectionRequestTimeout(5000)
-                    .setSocketTimeout(5000)
+                    .setConnectTimeout(20000)
+                    .setConnectionRequestTimeout(20000)
+                    .setSocketTimeout(20000)
                     .build());
 
             // 执行http请求

@@ -2,9 +2,15 @@ package SurveySystem.controller;
 
 import SurveySystem.entity.*;
 import SurveySystem.entity.Result;
+import SurveySystem.entity.vo.OptionAnalysisVO;
+import SurveySystem.entity.vo.QuestionAnalysisVO;
 import SurveySystem.service.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +29,9 @@ public class QuestionController {
         this.optionService = optionService;
         this.surveyService = surveyService;
     }
+
+    @Autowired
+    private QuestionAnalysisService questionAnalysisService;
 
     /**
      * 分页获取问题列表
