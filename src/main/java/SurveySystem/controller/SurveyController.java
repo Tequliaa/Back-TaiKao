@@ -23,22 +23,18 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @RequestMapping("/survey")
 public class SurveyController {
-    private final SurveyService surveyService;
+    @Autowired
+    private SurveyService surveyService;
     private final QuestionService questionService;
     private final OptionService optionService;
     private final CategoryService categoryService;
-    public SurveyController(SurveyService surveyService,
-                            QuestionService questionService,
+    public SurveyController(QuestionService questionService,
                             OptionService optionService,
                             CategoryService categoryService) {
-        this.surveyService = surveyService;
         this.questionService = questionService;
         this.optionService = optionService;
         this.categoryService = categoryService;
     }
-    @Autowired
-    private RedisBloomFilter bloomFilter;
-
     // 注入RedisTemplate（Spring Data Redis提供的Redis操作工具）
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;

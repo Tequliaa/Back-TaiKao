@@ -1,6 +1,6 @@
 package SurveySystem.service.Impl;
 
-import SurveySystem.annotation.CacheUpdate;
+import SurveySystem.annotation.CacheEvict;
 import SurveySystem.mapper.ResponseMapper;
 import SurveySystem.entity.Response;
 import SurveySystem.entity.vo.OptionAnalysisVO;
@@ -31,7 +31,7 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
-    @CacheUpdate(prefix = "response:details:",
+    @CacheEvict(prefix = "response:details:",
             keyParams = {"surveyId","userId"},
             separator = ":")
     public void saveResponses(List<Response> responses) {
@@ -39,14 +39,14 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
-    @CacheUpdate(prefix = "response:details:",
+    @CacheEvict(prefix = "response:details:",
             keyParams = {"surveyId","userId"},
             separator = ":")
     public void resetIsValidForResponses(int userId, int surveyId) {
         responseMapper.resetIsValidForResponses(userId,surveyId);
     }
     @Override
-    @CacheUpdate(prefix = "response:details:",
+    @CacheEvict(prefix = "response:details:",
             keyParams = {"surveyId","userId"},
             separator = ":")
     public void updateResponse(Response response) {
@@ -54,7 +54,7 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
-    @CacheUpdate(prefix = "response:details:",
+    @CacheEvict(prefix = "response:details:",
             keyParams = {"surveyId","userId"},
             separator = ":")
     public void updateFileValid(Response response) {
@@ -62,7 +62,7 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
-    @CacheUpdate(prefix = "response:details:",
+    @CacheEvict(prefix = "response:details:",
             keyParams = {"surveyId","userId"},
             separator = ":")
     public void updateResponseData(Response response) {
@@ -86,7 +86,7 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
-    @CacheUpdate(prefix = "response:details:",
+    @CacheEvict(prefix = "response:details:",
             keyParams = {"surveyId","userId"},
             separator = ":")
     public void saveFilePathToDatabase(Response response) {
@@ -99,7 +99,7 @@ public class ResponseServiceImpl implements ResponseService {
     }
 
     @Override
-    @CacheUpdate(prefix = "response:details:",
+    @CacheEvict(prefix = "response:details:",
             keyParams = {"surveyId","userId"},
             separator = ":")
     public void resetIsValidForResponsesExcludingIds(int userId, int surveyId, Set<Integer> excludedIds) {

@@ -1,5 +1,6 @@
 package SurveySystem.service.Impl;
 
+import SurveySystem.annotation.CacheEvict;
 import SurveySystem.mapper.QuestionMapper;
 import SurveySystem.entity.Question;
 import SurveySystem.service.QuestionService;
@@ -34,16 +35,19 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
+    @CacheEvict(prefix = "survey:detail:",keyParams = {"surveyId"})
     public int addQuestionAndReturnId(Question question) {
         return questionMapper.addQuestionAndReturnId(question);
     }
 
     @Override
+    @CacheEvict(prefix = "survey:detail:",keyParams = {"surveyId"})
     public boolean updateQuestion(Question question) {
         return questionMapper.updateQuestion(question);
     }
 
     @Override
+    @CacheEvict(prefix = "survey:detail:",keyParams = {"surveyId"})
     public boolean deleteQuestion(int questionId) {
         return questionMapper.deleteQuestion(questionId);
     }

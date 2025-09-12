@@ -8,7 +8,7 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface CacheUpdates {
+public @interface CacheEvicts {
     // 存储多个@CacheUpdate注解
-    CacheUpdate[] value();
+    CacheEvict[] value();
 }

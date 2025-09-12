@@ -1,6 +1,6 @@
 package SurveySystem.service.Impl;
 
-import SurveySystem.annotation.CacheUpdate;
+import SurveySystem.annotation.CacheEvict;
 import SurveySystem.mapper.UserSurveyMapper;
 import SurveySystem.entity.DepartmentSurvey;
 import SurveySystem.entity.User;
@@ -56,7 +56,7 @@ public class UserSurveyServiceImpl implements UserSurveyService {
     }
 
     @Override
-    @CacheUpdate(prefix = "response:details:",
+    @CacheEvict(prefix = "response:details:",
             keyParams = {"surveyId","userId"},
             separator = ":")
     public boolean updateSurveyStatus(int id, String status, Timestamp completedAt) {
@@ -65,7 +65,7 @@ public class UserSurveyServiceImpl implements UserSurveyService {
     }
 
     @Override
-    @CacheUpdate(prefix = "response:details:",
+    @CacheEvict(prefix = "response:details:",
             keyParams = {"surveyId","userId"},
             separator = ":")
     public boolean updateSurveyStatusBySurveyAndUser(int surveyId, int userId, String status, Timestamp completedAt) {

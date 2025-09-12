@@ -1,38 +1,25 @@
 package SurveySystem.service.Impl;
 
-import SurveySystem.annotation.CacheUpdate;
+import SurveySystem.annotation.CacheEvict;
 import SurveySystem.config.RedisBloomFilter;
-import SurveySystem.entity.Option;
-import SurveySystem.entity.Question;
 import SurveySystem.mapper.SurveyMapper;
 import SurveySystem.entity.Survey;
 import SurveySystem.service.OptionService;
 import SurveySystem.service.QuestionService;
 import SurveySystem.service.SurveyService;
 import jakarta.annotation.Resource;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class SurveyServiceImpl implements SurveyService {
 
     private final SurveyMapper surveyMapper;
-    @Autowired
-    private QuestionService questionService;
-    @Autowired
-    private OptionService optionService;
     @Resource
     private RedisBloomFilter bloomFilter;
-    // 注入RedisTemplate（Spring Data Redis提供的Redis操作工具）
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-    // 缓存过期时间（与问卷详情缓存保持一致，便于管理）
-    private static final long CACHE_EXPIRE_SECONDS = 3600;
 
     @Autowired
     public SurveyServiceImpl(SurveyMapper surveyMapper) {
@@ -73,14 +60,14 @@ public class SurveyServiceImpl implements SurveyService {
     }
 
     @Override
-    @CacheUpdate(prefix = "survey:detail:",keyParams = {"surveyId"})
+    @CacheEvict(prefix = "survey:detail:",keyParams = {"surveyId"})
     public void updateSurvey(Survey survey) {
         surveyMapper.updateSurvey(survey);
     }
 
     @Override
-    @CacheUpdate(prefix = "survey:detail:",keyParams = "surveyId", batch = true)
-    @CacheUpdate(prefix = "response:details:", keyParams = "surveyId", batch = true)
+    @CacheEvict(prefix = "survey:detail:",keyParams = "surveyId", batch = true)
+    @CacheEvict(prefix = "response:details:", keyParams = "surveyId", batch = true)
     public void deleteSurvey(int surveyId) {
         surveyMapper.deleteSurvey(surveyId);
     }

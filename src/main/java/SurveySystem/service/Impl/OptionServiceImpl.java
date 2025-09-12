@@ -1,5 +1,6 @@
 package SurveySystem.service.Impl;
 
+import SurveySystem.annotation.CacheEvict;
 import SurveySystem.mapper.OptionMapper;
 import SurveySystem.entity.Option;
 import SurveySystem.service.OptionService;
@@ -18,16 +19,19 @@ public class OptionServiceImpl implements OptionService {
         this.optionMapper = optionMapper;
     }
     @Override
+    @CacheEvict(prefix = "survey:detail:",keyParams = {"surveyId"})
     public boolean addOption(Option option) {
         return optionMapper.addOption(option);
     }
 
     @Override
+    @CacheEvict(prefix = "survey:detail:",keyParams = {"surveyId"})
     public boolean updateOption(Option option) {
         return optionMapper.updateOption(option);
     }
 
     @Override
+    @CacheEvict(prefix = "survey:detail:",keyParams = {"surveyId"})
     public boolean deleteOption(int optionId) {
         return optionMapper.deleteOption(optionId);
     }

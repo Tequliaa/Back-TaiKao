@@ -1,14 +1,10 @@
-package SurveySystem.entity;
+package SurveySystem.entity.dto;
 
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
-@Entity
-@Table(name = "options")
-public class Option {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class OptionDTO {
     private int optionId;
     private int questionId;
     private String questionName;
@@ -19,5 +15,5 @@ public class Option {
     private int isOpenOption;
     private int skipTo;
     private int checkCount;
-    private int surveyId;
+
 }

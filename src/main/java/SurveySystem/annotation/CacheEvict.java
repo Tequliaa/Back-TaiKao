@@ -8,8 +8,8 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Repeatable(CacheUpdates.class) // 保持可重复标注能力
-public @interface CacheUpdate {
+@Repeatable(CacheEvicts.class) // 保持可重复标注能力
+public @interface CacheEvict {
 
     // 缓存前缀（如"response:details:"）
     String prefix();

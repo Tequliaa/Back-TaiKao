@@ -3,6 +3,8 @@ package SurveySystem.controller;
 import SurveySystem.entity.Result;
 import SurveySystem.service.OptionService;
 import SurveySystem.entity.Option;
+import SurveySystem.service.QuestionService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -18,6 +20,9 @@ public class OptionController {
     public OptionController(OptionService optionService) {
         this.optionService = optionService;
     }
+
+    @Autowired
+    private QuestionService questionService;
 
     /**
      * 分页获取选项列表
@@ -82,6 +87,8 @@ public class OptionController {
         if (!"填空".equals(option.getType()) && option.getDescription() == null) {
             throw new IllegalArgumentException("Description is required for non-blank options");
         }
+        int surveyId = questionService.getQuestionById(option.getQuestionId()).getSurveyId();
+        option.setSurveyId(surveyId);
         optionService.addOption(option);
         return Result.success();
     }
@@ -95,6 +102,8 @@ public class OptionController {
     public Result<Void> updateOption(@RequestBody Option option) {
         option.setSkipTo(option.getIsSkip() == 0 ? 0 : option.getSkipTo());
         option.setSortKey("1"); // Maintaining your original behavior
+        int surveyId = questionService.getQuestionById(option.getQuestionId()).getSurveyId();
+        option.setSurveyId(surveyId);
         optionService.updateOption(option);
         return Result.success();
     }
@@ -106,6 +115,9 @@ public class OptionController {
      */
     @DeleteMapping("/delete")
     public Result<Void> deleteOption(@RequestParam int optionId) {
+        Option option = optionService.getOptionById(optionId);
+        int surveyId = questionService.getQuestionById(option.getQuestionId()).getSurveyId();
+        option.setSurveyId(surveyId);
         optionService.deleteOption(optionId);
         return Result.success();
     }
