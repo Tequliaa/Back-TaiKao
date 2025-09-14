@@ -41,51 +41,97 @@ public class QuestionAnalysisServiceImpl implements QuestionAnalysisService {
     @Transactional
     @Override
     public void getAnalysisDataStream(List<QuestionAnalysisVO> questionAnalysisVOList, SseEmitter emitter) throws IOException {
+        // 设置SSE超时时间为3分钟
         log.info("开始流式处理问卷分析数据，共{}个问题", questionAnalysisVOList.size());
 
-        // 1. 格式化所有问卷数据
-        List<Map<String, Object>> formattedQuestions = formatQuestionData(questionAnalysisVOList);
-        log.info("成功格式化{}个有效问题数据", formattedQuestions.size());
-
-        if (formattedQuestions.isEmpty()) {
-            log.warn("没有可分析的有效问题数据");
-            emitter.send("没有可分析的有效问题数据");
-            emitter.complete();
-            return;
-        }
-
-        // 2. 构建专业提示词
-        String prompt = buildAnalysisPrompt();
-        log.debug("构建的提示词: {}", prompt);
-
-        // 3. 构建完整请求参数
-        Map<String, Object> requestMap = buildRequestParams(formattedQuestions, prompt);
-        requestMap.put("response_mode", "streaming"); // 设置为流式响应模式
-
-        StringBuilder fullAnalysis = new StringBuilder();
-
         try {
-            // 4. 流式调用AI接口
+            // 立即向客户端发送连接成功事件，确保用户知道已开始处理
+            emitter.send(SseEmitter.event()
+                    .name("status")
+                    .data("开始分析数据，请稍候...")
+                    .build());
+
+            // 格式化问卷数据
+            List<Map<String, Object>> formattedQuestions = formatQuestionData(questionAnalysisVOList);
+            log.info("成功格式化{}个有效问题数据", formattedQuestions.size());
+
+            if (formattedQuestions.isEmpty()) {
+                log.warn("没有可分析的有效问题数据");
+                emitter.send(SseEmitter.event()
+                        .name("analysis")
+                        .data("没有可分析的有效问题数据")
+                        .build());
+                emitter.complete();
+                return;
+            }
+
+            // 发送准备中状态
+            emitter.send(SseEmitter.event()
+                    .name("status")
+                    .data("正在准备AI分析...")
+                    .build());
+
+            // 构建专业提示词
+            String prompt = buildAnalysisPrompt();
+            log.debug("构建的提示词: {}", prompt);
+
+            // 构建完整请求参数
+            Map<String, Object> requestMap = buildRequestParams(formattedQuestions, prompt);
+            requestMap.put("response_mode", "streaming"); // 设置为流式响应模式
+
+            StringBuilder fullAnalysis = new StringBuilder();
+
+            // 发送AI分析开始状态
+            emitter.send(SseEmitter.event()
+                    .name("status")
+                    .data("AI开始生成分析报告...")
+                    .build());
+
+            // 流式调用AI接口，确保实时推送
             getStreamAnalysis(requestMap, (analysisSegment) -> {
                 try {
+                    // 记录完整分析结果
                     fullAnalysis.append(analysisSegment);
-                    // 发送流式分析片段
-                    log.info("接收到AI分析片段: {}", analysisSegment);
+
+                    // 立即推送每个片段，不等待缓冲区
+                    log.debug("立即推送分析片段: {}", analysisSegment);
                     emitter.send(SseEmitter.event()
                             .name("analysis")
                             .data(analysisSegment)
                             .build());
+
+                    // 强制刷新输出缓冲区，确保数据立即发送
+                    try {
+                        // 触发刷新（关键代码）
+                        emitter.send(SseEmitter.event().data(""));
+                    } catch (Exception flushException) {
+                        log.warn("刷新输出缓冲区失败", flushException);
+                    }
                 } catch (IOException e) {
                     log.error("发送SSE分析片段失败", e);
                 }
             });
 
-            // 5. 完成流式响应并记录完整结果
+            // 发送完成事件标记
+            emitter.send(SseEmitter.event()
+                    .name("complete")
+                    .data("analysis_complete")
+                    .build());
+
+            // 完成流式响应
             emitter.complete();
             log.info("AI分析完整结果: {}", fullAnalysis.toString());
         } catch (Exception e) {
+            log.error("流式分析过程异常", e);
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data("分析过程中发生错误: " + e.getMessage())
+                        .build());
+            } catch (IOException ex) {
+                log.error("发送错误信息失败", ex);
+            }
             emitter.completeWithError(e);
-            throw e;
         }
     }
 
@@ -166,20 +212,20 @@ public class QuestionAnalysisServiceImpl implements QuestionAnalysisService {
         Map<String, Object> requestMap = new HashMap<>(3);
 
         // 构建inputs对象（包含API要求的所有字段）
-        Map<String, Object> inputs = new HashMap<>(4);
-        inputs.put("title", "问卷数据分析请求"); // API必填字段
-        inputs.put("query", prompt);             // 提示词放入query字段
-        inputs.put("questions", data);           // 格式化的业务数据
+        Map<String, Object> inputs = new HashMap<>(1);
 
         // 将所有选项合并为一个字符串（段落形式）
         StringBuilder allOptionsBuilder = new StringBuilder();
         for (int i = 0; i < data.size(); i++) {
             Map<String, Object> question = data.get(i);
-            allOptionsBuilder.append("问题").append(i + 1).append("选项：")
+            allOptionsBuilder.append("问题").append(i + 1).append(question.get("title"))
+                    .append("(").append(question.get("type")).append(")")
+                    .append("选项：")
                     .append(question.get("options"))
                     .append("。"); // 用句号分隔不同问题的选项
         }
-        inputs.put("options", allOptionsBuilder.toString().trim()); // 字符串类型的options
+        log.info("请求参数。:{}",allOptionsBuilder);
+        inputs.put("questions", allOptionsBuilder.toString().trim());
 
         requestMap.put("inputs", inputs);
         requestMap.put("user", API_USER);            // 用户标识
@@ -195,35 +241,59 @@ public class QuestionAnalysisServiceImpl implements QuestionAnalysisService {
     public void getStreamAnalysis(Map<String, Object> requestMap, Consumer<String> callback) throws IOException {
         log.info("开始流式调用AI分析接口");
 
-        try (CloseableHttpClient client = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(API_URL);
-            httpPost.setHeader("Authorization", "Bearer " + API_TOKEN);
-            httpPost.setHeader("Content-Type", "application/json");
-            httpPost.setEntity(new StringEntity(JSON.toJSONString(requestMap)));
+        // 使用不自动关闭的连接，确保流式响应的实时性
+        CloseableHttpClient client = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(API_URL);
+        httpPost.setHeader("Authorization", "Bearer " + API_TOKEN);
+        httpPost.setHeader("Content-Type", "application/json");
+        httpPost.setEntity(new StringEntity(JSON.toJSONString(requestMap)));
 
-            try (CloseableHttpResponse response = client.execute(httpPost)) {
-                try (BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(response.getEntity().getContent()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        if (line.startsWith("data: ")) {
-                            try {
-                                // 解析流式响应数据
-                                String jsonStr = line.substring(6);
-                                JSONObject jsonObject = JSON.parseObject(jsonStr);
-                                if (jsonObject.containsKey("answer")) {
-                                    String analysisSegment = jsonObject.getString("answer");
-                                    if (analysisSegment != null && !analysisSegment.isEmpty()) {
-                                        callback.accept(analysisSegment);
-                                    }
-                                }
-                            } catch (Exception e) {
-                                log.error("解析流式分析数据失败: {}", line, e);
+        try {
+            // 立即执行请求
+            CloseableHttpResponse response = client.execute(httpPost);
+
+            // 立即处理响应，不使用try-with-resources自动关闭
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(response.getEntity().getContent()));
+
+            String line;
+            // 实时读取并推送每个响应片段
+            while ((line = reader.readLine()) != null) {
+                // 立即处理每一行数据，不等待批处理
+                if (line.startsWith("data: ")) {
+                    try {
+                        // 解析流式响应数据
+                        String jsonStr = line.substring(6);
+                        // 检查是否是完成标志
+                        if (jsonStr.equals("[DONE]")) {
+                            log.info("AI流式响应已完成");
+                            break;
+                        }
+
+                        JSONObject jsonObject = JSON.parseObject(jsonStr);
+                        if (jsonObject.containsKey("answer")) {
+                            String analysisSegment = jsonObject.getString("answer");
+                            if (analysisSegment != null && !analysisSegment.isEmpty()) {
+                                // 立即推送当前片段给前端，不等待完整内容
+                                log.debug("从AI接收到片段: {}", analysisSegment);
+                                callback.accept(analysisSegment);
                             }
                         }
+                    } catch (Exception e) {
+                        log.error("解析流式分析数据失败: {}", line, e);
                     }
                 }
             }
+
+            // 确保资源在最后被关闭
+            reader.close();
+            response.close();
+        } catch (Exception e) {
+            log.error("流式调用AI接口异常", e);
+            throw e;
+        } finally {
+            // 确保客户端连接被关闭
+            client.close();
         }
     }
 }

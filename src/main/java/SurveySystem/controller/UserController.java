@@ -155,7 +155,14 @@ public class UserController {
      */
     @GetMapping("/info")
     public Result<UserInfoVO> getUserInfo() {
-        int userId = BaseContext.getCurrentId();
+        int userId =0;
+        try {
+            userId = BaseContext.getCurrentId();
+        }catch (Exception e){
+            e.printStackTrace();;
+        }finally {
+            BaseContext.removeCurrentId();
+        }
         log.info("当前用户id：" + userId);
         User user = userService.getUserByUserId(userId);
         UserInfoVO userVo = new UserInfoVO();
@@ -191,8 +198,14 @@ public class UserController {
             @RequestParam String newPwd,
             @RequestParam String rePwd,
             @RequestHeader("Authorization") String token) {
-
-        int userId = BaseContext.getCurrentId();
+        int userId =0;
+        try {
+            userId = BaseContext.getCurrentId();
+        }catch (Exception e){
+            e.printStackTrace();;
+        }finally {
+            BaseContext.removeCurrentId();
+        }
         log.info("当前用户id：" + userId);
         User loginUser = userService.getUserByUserId(userId);
 

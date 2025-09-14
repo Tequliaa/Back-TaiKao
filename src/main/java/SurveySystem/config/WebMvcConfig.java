@@ -36,7 +36,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/swagger-ui/**",      // Swagger UI
                         "/swagger-ui.html",    // Swagger UI 页面
                         "/error",              // 错误页面（重要！）
-                        "/favicon.ico"         // 网站图标
+                        "/favicon.ico",         // 网站图标
+
+                        "/ws/**" //WebSocket连接放行
+
                 );
     }
 

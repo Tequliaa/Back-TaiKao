@@ -4,8 +4,10 @@ import SurveySystem.config.RedisBloomFilter;
 import SurveySystem.entity.*;
 import SurveySystem.entity.vo.OptionAnalysisVO;
 import SurveySystem.entity.vo.QuestionAnalysisVO;
+import SurveySystem.handler.SurveyWebSocketHandler;
 import SurveySystem.service.*;
 import SurveySystem.utils.IpUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/response")
+@Slf4j
 public class ResponseController {
 
     private final ResponseService responseService;
@@ -30,6 +33,9 @@ public class ResponseController {
     private final QuestionService questionService;
     private final OptionService optionService;
     private final UserSurveyService userSurveyService;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private QuestionAnalysisService questionAnalysisService;
@@ -135,6 +141,10 @@ public class ResponseController {
             @RequestParam int userId) {
         System.out.println("这里是response的details");
 
+        // 记录开始时间
+        long startTime = System.currentTimeMillis();
+        boolean isCacheHit = false; // 是否命中缓存
+
         if(!redisBloomFilter.mightContain(surveyId)){
             return Result.error("数据库内无该问卷数据。");
         }
@@ -158,6 +168,7 @@ public class ResponseController {
                 // 验证缓存有效性
                 if (!ObjectUtils.isEmpty(survey) && !ObjectUtils.isEmpty(questions) && !questions.isEmpty()) {
                     isSurveyCacheValid = true;
+                    isCacheHit = true;
                 }
             }
 
@@ -234,6 +245,13 @@ public class ResponseController {
             resultMap.put("questions", questions);         // 缓存数据（复用问卷缓存）
             resultMap.put("survey", survey);               // 缓存数据（复用问卷缓存）
             resultMap.put("questionIndexMap", questionIndexMap); // 缓存数据
+
+
+            // 计算响应时间（毫秒）
+            long responseTime = System.currentTimeMillis() - startTime;
+            // 打印日志：是否命中缓存 + 响应时间
+            log.info("查询问卷ID: {}, 缓存命中: {}, 响应时间: {}ms",
+                    surveyId, isCacheHit, responseTime);
 
             return Result.success(resultMap);
 
@@ -370,6 +388,17 @@ public class ResponseController {
 
             // 完成问卷
             completeSurvey(surveyId, userId, isSaveAction);
+
+            User user = userService.getUserByUserId(userId);
+            int newUnfinishedCount = userSurveyService.getUserInfoCount(surveyId, user.getDepartmentId()); // 0=未完成
+            // 4. 构造推送数据（需包含前端需要的字段，如未完成人数、提示消息）
+            Map<String, Object> pushData = new HashMap<>();
+            pushData.put("unfinishedTotalRecords", newUnfinishedCount); // 未完成人数（前端要更新的数值）
+            pushData.put("message", "用户【" + user.getName() + "】已完成答题"); // 提示消息
+            // 5. 触发WebSocket广播：向该问卷的所有在线前端推送更新
+            SurveyWebSocketHandler.broadcastToSurvey(surveyId, pushData);
+
+
             return Result.success();
         } catch (Exception e) {
             return Result.error("提交响应失败：" + e.getMessage());
