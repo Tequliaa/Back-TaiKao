@@ -20,9 +20,9 @@ spring:
           # 连接池最大阻塞等待时间（使用负值表示没有限制）
           max-wait: -1ms
           # 连接池中的最大空闲连接
-          max-idle: 10
+          max-idle: 60
           # 连接池中的最小空闲连接
-          min-idle: 0
+          min-idle: 10
   servlet:
     multipart:
       max-file-size: 20MB
@@ -46,9 +46,14 @@ spring:
     connection-timeout: 10000  # 连接超时时间，毫秒
     listener:
       simple:
-        concurrency: 10  # 消费者最小并发数
-        max-concurrency: 50  # 消费者最大并发数
-        prefetch: 1  # 每个消费者每次处理的消息数
+        concurrency: 3  # 日常3个常驻消费者，覆盖非高峰并发
+        max-concurrency: 15  # 峰值扩容到15个，避免数据库/CPU过载
+        prefetch: 1  # 保证问卷消息顺序性，避免数据冲突
+        # 消息重试（避免瞬时故障丢失）
+        retry:
+          enabled: true  # 开启重试
+          max-attempts: 3  # 最多重试3次（每次间隔递增，如1s→3s→5s）
+          initial-interval: 1000  # 首次重试间隔1秒
 
 
 server:

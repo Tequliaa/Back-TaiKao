@@ -1,8 +1,10 @@
 package SurveySystem.service.Impl;
 
 import SurveySystem.annotation.CacheEvict;
+import SurveySystem.entity.Option;
 import SurveySystem.mapper.QuestionMapper;
 import SurveySystem.entity.Question;
+import SurveySystem.service.OptionService;
 import SurveySystem.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,9 @@ import java.util.List;
 public class QuestionServiceImpl implements QuestionService {
 
     private final QuestionMapper questionMapper;
+
+    @Autowired
+    private OptionService optionService;
 
     @Autowired
     public QuestionServiceImpl(QuestionMapper questionMapper) {
@@ -49,6 +54,12 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @CacheEvict(prefix = "survey:detail:",keyParams = {"surveyId"})
     public boolean deleteQuestion(int questionId) {
+        List<Option> options = optionService.getOptionsByQuestionId(questionId);
+        if(options!=null&&options.size()>0){
+            for(Option option:options){
+                optionService.deleteOption(option.getOptionId());
+            }
+        }
         return questionMapper.deleteQuestion(questionId);
     }
 
