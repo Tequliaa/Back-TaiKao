@@ -1,4 +1,4 @@
-package SurveySystem.service.Impl;
+package SurveySystem.rabbitmq;
 
 import SurveySystem.config.SurveyMessageQueueConfig;
 import SurveySystem.entity.SurveySubmitMessage;

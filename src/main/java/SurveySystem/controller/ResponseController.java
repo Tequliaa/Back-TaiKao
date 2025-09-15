@@ -4,9 +4,8 @@ import SurveySystem.config.RedisBloomFilter;
 import SurveySystem.entity.*;
 import SurveySystem.entity.vo.OptionAnalysisVO;
 import SurveySystem.entity.vo.QuestionAnalysisVO;
-import SurveySystem.handler.SurveyWebSocketHandler;
 import SurveySystem.service.*;
-import SurveySystem.service.Impl.SurveyMessageProducer;
+import SurveySystem.rabbitmq.SurveyMessageProducer;
 import SurveySystem.utils.FileUploadUtil;
 import SurveySystem.utils.IpUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -18,12 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.File;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/response")
@@ -275,65 +271,135 @@ public class ResponseController {
     public Result<Map<String, Object>> getResponseStatistics(
             @RequestParam int surveyId,
             @RequestParam(defaultValue = "0") int departmentId) {
+        // 记录开始时间和缓存命中状态
+        long startTime = System.currentTimeMillis();
+        boolean isCacheHit = false;
+
         try {
-            Survey survey = surveyService.getSurveyById(surveyId);
-            List<Question> questions = questionService.getQuestionsBySurveyId(surveyId);
-            List<QuestionAnalysisVO> questionAnalysisVOList = new ArrayList<>();
-            // 存储矩阵题单元格选择情况的Map
-            Map<Integer, List<Map<String, Object>>> matrixCellData = new HashMap<>();
+            // 1. 检查布隆过滤器，快速判断问卷是否存在
+            if(!redisBloomFilter.mightContain(surveyId)){
+                return Result.error("数据库内无该问卷数据。");
+            }
 
-            for (Question question : questions) {
-                QuestionAnalysisVO questionAnalysisVO = new QuestionAnalysisVO();
-                questionAnalysisVO.setQuestionName(question.getDescription());
-                questionAnalysisVO.setQuestionType(question.getType());
+            // 2. 复用问卷基础数据缓存（与details接口共用）
+            String surveyCacheKey = SURVEY_DETAIL_KEY_PREFIX + surveyId;
+            HashOperations<String, String, Object> hashOps = redisTemplate.opsForHash();
 
-                List<Option> options = optionService.getOptionsWithCheckCountByQuestionId(question.getQuestionId(), departmentId);
-                List<OptionAnalysisVO> analysisOptions=new ArrayList<>();
-                options.forEach(option -> {
-                    OptionAnalysisVO optionAnalysisVO=new OptionAnalysisVO();
-                    optionAnalysisVO.setDescription(option.getDescription());
-                    optionAnalysisVO.setCheckCount(option.getCheckCount());
-                    //System.out.println("optionAnalysisVO "+optionAnalysisVO);
-                    analysisOptions.add(optionAnalysisVO);
-                });
-                questionAnalysisVO.setOptions(analysisOptions);
-                questionAnalysisVOList.add(questionAnalysisVO);
-                question.setOptions(options);
+            Survey survey = null;
+            List<Question> questions = null;
+            boolean isSurveyCacheValid = false;
 
-                //if(question.getType().equals("排序")){
-                //    for(Option option:question.getOptions()){
-                //        System.out.println("平均排序顺序"+option.getCheckCount());
-                //    }
-                //}
-                // 如果是矩阵题，获取单元格选择情况
-                if (question.getType().equals("矩阵单选") || question.getType().equals("矩阵多选")) {
-                    List<Map<String, Object>> cellData = optionService.getMatrixCellCheckCount(question.getQuestionId(), departmentId);
-                    matrixCellData.put(question.getQuestionId(), cellData);
+            // 2.1 尝试从缓存获取问卷基础数据
+            if (redisTemplate.hasKey(surveyCacheKey)) {
+                survey = (Survey) hashOps.get(surveyCacheKey, "survey");
+                questions = (List<Question>) hashOps.get(surveyCacheKey, "questions");
+
+                // 验证缓存有效性
+                if (!ObjectUtils.isEmpty(survey) && !ObjectUtils.isEmpty(questions) && !questions.isEmpty()) {
+                    isSurveyCacheValid = true;
+                    isCacheHit = true;
+                }
+            }
+
+            // 2.2 缓存无效则查数据库并更新缓存（与details接口逻辑一致）
+            if (!isSurveyCacheValid) {
+                survey = surveyService.getSurveyById(surveyId);
+                questions = questionService.getQuestionsBySurveyId(surveyId);
+                for (Question question : questions) {
+                    List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
+                    question.setOptions(options);
                 }
 
+                // 数据库也无数据
+                if (ObjectUtils.isEmpty(survey) || ObjectUtils.isEmpty(questions)) {
+                    hashOps.put(surveyCacheKey, "survey", null);
+                    hashOps.put(surveyCacheKey, "questions", Collections.emptyList());
+                    redisTemplate.expire(surveyCacheKey, EMPTY_CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS);
+                    return Result.error("问卷不存在或无问题数据");
+                }
 
+                // 更新缓存，供后续请求复用
+                hashOps.put(surveyCacheKey, "survey", survey);
+                hashOps.put(surveyCacheKey, "questions", questions);
+                redisTemplate.expire(surveyCacheKey, CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS);
             }
-            // 在填充 matrixCellData 后添加日志输出
-            //System.out.println("===== 矩阵题单元格数据 =====");
-            //matrixCellData.forEach((questionId, cellDataList) -> {
-            //    System.out.println("问题ID: " + questionId);
-            //    cellDataList.forEach(cell -> {
-            //        System.out.println("单元格数据: " + cell);
-            //    });
-            //});
-            //responseService.getAnalysisData(questionAnalysisVOList);
-            List<UserSurvey> userSurveys=userSurveyService.getUserDepartmentInfoBySurveyId(surveyId);
 
-            int unfinishedTotalRecords = userSurveyService.getUserInfoCount(surveyId, departmentId);
+            // 3. 处理统计接口特有数据的缓存
+            String statsCacheKey = SURVEY_DETAIL_KEY_PREFIX + surveyId + ":" + departmentId;
+            Map<String, Object> statsCacheData = null;
+            boolean isStatsCacheValid = false;
 
+            // 3.1 尝试从缓存获取统计数据
+            if (redisTemplate.hasKey(statsCacheKey)) {
+                statsCacheData = (Map<String, Object>) redisTemplate.opsForValue().get(statsCacheKey);
+                if (statsCacheData != null) {
+                    isStatsCacheValid = true;
+                    isCacheHit = true;
+                }
+            }
+
+            // 3.2 缓存无效则计算统计数据并更新缓存
+            if (!isStatsCacheValid) {
+                statsCacheData = new HashMap<>();
+
+                // 计算问题分析数据
+                List<QuestionAnalysisVO> questionAnalysisVOList = new ArrayList<>();
+                Map<Integer, List<Map<String, Object>>> matrixCellData = new HashMap<>();
+
+                for (Question question : questions) {
+                    QuestionAnalysisVO questionAnalysisVO = new QuestionAnalysisVO();
+                    questionAnalysisVO.setQuestionName(question.getDescription());
+                    questionAnalysisVO.setQuestionType(question.getType());
+
+                    List<Option> options = optionService.getOptionsWithCheckCountByQuestionId(question.getQuestionId(), departmentId);
+                    List<OptionAnalysisVO> analysisOptions = new ArrayList<>();
+                    options.forEach(option -> {
+                        OptionAnalysisVO optionAnalysisVO = new OptionAnalysisVO();
+                        optionAnalysisVO.setDescription(option.getDescription());
+                        optionAnalysisVO.setCheckCount(option.getCheckCount());
+                        analysisOptions.add(optionAnalysisVO);
+                    });
+                    questionAnalysisVO.setOptions(analysisOptions);
+                    questionAnalysisVOList.add(questionAnalysisVO);
+                    question.setOptions(options);
+
+                    // 处理矩阵题数据
+                    if (question.getType().equals("矩阵单选") || question.getType().equals("矩阵多选")) {
+                        List<Map<String, Object>> cellData = optionService.getMatrixCellCheckCount(question.getQuestionId(), departmentId);
+                        matrixCellData.put(question.getQuestionId(), cellData);
+                    }
+                }
+
+                // 获取用户参与数据
+                List<UserSurvey> userSurveys = userSurveyService.getUserDepartmentInfoBySurveyId(surveyId);
+                int unfinishedTotalRecords = userSurveyService.getUserInfoCount(surveyId, departmentId);
+
+                // 存入缓存数据对象
+                statsCacheData.put("questionAnalysisVOList", questionAnalysisVOList);
+                statsCacheData.put("matrixCellData", matrixCellData);
+                statsCacheData.put("userSurveys", userSurveys);
+                statsCacheData.put("unfinishedTotalRecords", unfinishedTotalRecords);
+
+                // 更新缓存
+                redisTemplate.opsForValue().set(statsCacheKey, statsCacheData, CACHE_EXPIRE_SECONDS, TimeUnit.SECONDS);
+            }
+
+            // 4. 组装最终结果
             Map<String, Object> resultMap = new HashMap<>();
-            resultMap.put("survey", survey);
-            resultMap.put("userSurveys",userSurveys);
-            resultMap.put("questions", questions);
-            resultMap.put("unfinishedTotalRecords", unfinishedTotalRecords);
+            resultMap.put("survey", survey);                   // 复用的问卷基础数据
+            resultMap.put("questions", questions);             // 复用的问题列表
+            resultMap.put("questionAnalysisVOList", statsCacheData.get("questionAnalysisVOList"));
+            resultMap.put("matrixCellData", statsCacheData.get("matrixCellData"));
+            resultMap.put("unfinishedTotalRecords", statsCacheData.get("unfinishedTotalRecords"));
             resultMap.put("departmentId", departmentId);
-            resultMap.put("matrixCellData", matrixCellData); // 添加矩阵单元格数据
+
+            // 打印性能日志
+            long responseTime = System.currentTimeMillis() - startTime;
+            log.info("统计问卷ID: {}, 部门ID: {}, 缓存命中: {}, 响应时间: {}ms",
+                    surveyId, departmentId, isCacheHit, responseTime);
+
             return Result.success(resultMap);
+
         } catch (Exception e) {
             return Result.error("获取响应统计失败：" + e.getMessage());
         }
@@ -387,7 +453,6 @@ public class ResponseController {
             message.setUserRole(userRole);
             message.setIpAddress(ipAddress);
             message.setActionType(formData.get("actionType"));
-            // 构建消息对象时使用fileInfoMap
 
             // 发送消息到队列，异步处理
             surveyMessageProducer.sendSurveySubmitMessage(message);
@@ -398,5 +463,116 @@ public class ResponseController {
             return Result.error("提交请求处理失败：" + e.getMessage());
         }
     }
+
+
+    @PostMapping("/test")
+    public Result<String> test(
+            @RequestParam int surveyId,
+            @RequestParam(defaultValue = "false") boolean isSaveAction,
+            @RequestParam(required = false) Integer answerUserId) {
+
+        try {
+            // 生成随机用户ID (1000-9999之间)
+            Random random = new Random();
+            int userId = 513 + random.nextInt(1000);
+
+            // Mock基础参数
+            String userRole = "普通用户";
+            String ipAddress = "127.0.0.1";
+
+            // Mock formData，保留原始结构但使用随机数据
+            Map<String, String> mockFormData = new HashMap<>();
+            mockFormData.put("surveyId", String.valueOf(surveyId));
+            mockFormData.put("isSaveAction", String.valueOf(isSaveAction));
+            mockFormData.put("userId", String.valueOf(userId));
+            mockFormData.put("userRole", userRole);
+            mockFormData.put("ipAddress", ipAddress);
+
+            // Mock单选题/多选题 (随机选中状态)
+            String[] multiQuestions = {
+                    "question_211_optionId_564",
+                    "question_220_optionId_588",
+                    "question_221_optionId_593",
+                    "question_221_optionId_594",
+                    "question_221_optionId_595",
+                    "question_221_optionId_596",
+                    "question_213_optionId_570",
+                    "question_224_optionId_608",
+                    "question_225_optionId_611",
+                    "question_225_optionId_612",
+                    "question_227_optionId_624",
+                    "question_229_optionId_634",
+                    "question_229_optionId_633"
+            };
+            for (String question : multiQuestions) {
+                // 70%概率选中
+                mockFormData.put(question, random.nextDouble() < 0.7 ? "on" : "");
+            }
+
+            // Mock矩阵题
+            String[] matrixQuestions = {
+                    "question_222_row_599_col_714",
+                    "question_222_row_710_col_714",
+                    "question_222_row_711_col_714",
+                    "question_222_row_712_col_714",
+                    "question_222_row_713_col_714",
+                    "question_223_row_601_col_605",
+                    "question_223_row_602_col_605",
+                    "question_223_row_603_col_605",
+                    "question_223_row_604_col_605"
+            };
+            for (String question : matrixQuestions) {
+                // 60%概率选中
+                mockFormData.put(question, random.nextDouble() < 0.6 ? "on" : "");
+            }
+
+            // Mock评分题 (1-5分)
+            mockFormData.put("rating_231_636", String.valueOf(random.nextInt(5) + 1));
+            mockFormData.put("rating_232_637", String.valueOf(random.nextInt(5) + 1));
+
+            // Mock文本题
+            mockFormData.put("question_233", "测试文本" + random.nextInt(1000));
+            mockFormData.put("question_212", String.valueOf(10000 + random.nextInt(90000)));
+
+            // Mock排序题
+            mockFormData.put("question_226_optionId_620", "1");
+            mockFormData.put("question_226_optionId_617", "2");
+            mockFormData.put("question_226_optionId_622", "3");
+            mockFormData.put("question_226_optionId_619", "4");
+            mockFormData.put("question_226_optionId_618", "5");
+            mockFormData.put("question_226_optionId_621", "6");
+
+            // Mock文件参数
+            mockFormData.put("existing_files_230", "");
+
+            // Mock文件信息 (不实际处理文件，只生成路径)
+            Map<String, String> fileInfoMap = new HashMap<>();
+            if (random.nextDouble() < 0) { // 0%概率包含文件
+                String mockFileName = "mock_file_" + System.currentTimeMillis() + ".pdf";
+                String mockFilePath = "/tmp/" + mockFileName;
+                fileInfoMap.put("file_230", mockFilePath + "|" + mockFileName + "|application/pdf");
+            }
+
+            // 构建消息对象
+            SurveySubmitMessage message = new SurveySubmitMessage();
+            message.setSurveyId(surveyId);
+            message.setSaveAction(isSaveAction);
+            message.setAnswerUserId(answerUserId != null ? answerUserId : userId);
+            message.setFormData(mockFormData);
+            message.setFileMap(fileInfoMap);
+            message.setUserId(userId);
+            message.setUserRole(userRole);
+            message.setIpAddress(ipAddress);
+            message.setActionType("submit");
+
+            // 发送消息到队列
+            surveyMessageProducer.sendSurveySubmitMessage(message);
+
+            return Result.success("提交请求已接收，正在处理中（Mock数据）");
+        } catch (Exception e) {
+            return Result.error("提交请求处理失败：" + e.getMessage());
+        }
+    }
+
 }
 

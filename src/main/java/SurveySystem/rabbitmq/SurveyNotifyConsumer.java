@@ -1,4 +1,4 @@
-package SurveySystem.service.Impl;
+package SurveySystem.rabbitmq;
 
 import SurveySystem.config.SurveyMessageQueueConfig;
 import SurveySystem.handler.SurveyWebSocketHandler;
@@ -21,7 +21,7 @@ public class SurveyNotifyConsumer {
                 log.error("通知消息缺少 surveyId：{}", message);
                 return;
             }
-            // 处理WebSocket广播
+            //// 处理WebSocket广播
             SurveyWebSocketHandler.broadcastToSurvey(surveyId, message);
             log.info("已向问卷 {} 广播通知：{}", surveyId, message.get("message"));
         } catch (Exception e) {

@@ -1,4 +1,4 @@
-package SurveySystem.service.Impl;
+package SurveySystem.rabbitmq;
 
 import SurveySystem.config.SurveyMessageQueueConfig;
 import SurveySystem.entity.*;
@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -56,7 +55,7 @@ public class SurveySubmitConsumer {
             // 检查是否已提交
             UserSurvey userSurvey = userSurveyService.getUserSurveyByUserIdAndSurveyId(
                 message.getUserId(), message.getSurveyId());
-            if ("已完成".equals(userSurvey.getStatus())) {
+            if (userSurvey!=null&&"已完成".equals(userSurvey.getStatus())) {
                 // 可以记录已提交的情况
                 return;
             }
