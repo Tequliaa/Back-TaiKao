@@ -36,6 +36,20 @@ spring:
       allow-credentials: true
       max-age: 3600
 
+  rabbitmq:
+    host: localhost  # 服务器地址，本地测试用localhost，生产环境填服务器IP或域名
+    port: 5672       # 通信端口，默认5672
+    username: guest  # 用户名，本地默认是guest
+    password: guest  # 密码，本地默认是guest
+    virtual-host: /  # 虚拟主机，默认是/
+    # 以下是可选的高级配置
+    connection-timeout: 10000  # 连接超时时间，毫秒
+    listener:
+      simple:
+        concurrency: 10  # 消费者最小并发数
+        max-concurrency: 50  # 消费者最大并发数
+        prefetch: 1  # 每个消费者每次处理的消息数
+
 
 server:
   port: 8082

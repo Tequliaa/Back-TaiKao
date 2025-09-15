@@ -66,15 +66,16 @@ public class CacheEvictAspect {
             }
 
             // 打印日志，方便调试（确认 Key 是否正确）
-            System.out.println("准备删除的缓存 Key 模式：" + cacheKeyPattern);
+            //System.out.println("准备删除的缓存 Key 模式：" + cacheKeyPattern);
 
             Set<String> keys = redisTemplate.keys(cacheKeyPattern);
             if (keys != null && !keys.isEmpty()) {
                 redisTemplate.delete(keys);
-                System.out.println("成功删除缓存 Key：" + keys);
-            } else {
-                System.out.println("未找到匹配的缓存 Key：" + cacheKeyPattern);
+                //System.out.println("成功删除缓存 Key：" + keys);
             }
+            //else {
+            //    System.out.println("未找到匹配的缓存 Key：" + cacheKeyPattern);
+            //}
         });
     }
 

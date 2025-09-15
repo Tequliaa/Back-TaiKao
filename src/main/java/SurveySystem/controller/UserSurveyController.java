@@ -3,6 +3,7 @@ package SurveySystem.controller;
 import SurveySystem.entity.Result;
 import SurveySystem.entity.User;
 import SurveySystem.entity.UserSurvey;
+import SurveySystem.handler.SurveyWebSocketHandler;
 import SurveySystem.service.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -141,6 +142,16 @@ public class UserSurveyController {
         System.out.println("status: "+status);
         try {
             userSurveyService.updateSurveyStatusBySurveyAndUser(surveyId,userId, status, completedAt);
+            User user = userService.getUserByUserId(userId);
+            int newUnfinishedCount = userSurveyService.getUserInfoCount(
+                    surveyId, user.getDepartmentId());
+            // 准备通知数据（添加 surveyId 到消息体中）
+            Map<String, Object> pushData = new HashMap<>();
+            pushData.put("surveyId", surveyId); // 新增：将 surveyId 放入消息体
+            pushData.put("unfinishedTotalRecords", newUnfinishedCount);
+            pushData.put("message", "用户【" + user.getName() + "】问卷被打回");
+            // 处理WebSocket广播
+            SurveyWebSocketHandler.broadcastToSurvey(surveyId, pushData);
             return Result.success("Survey status updated successfully!");
         } catch (Exception e) {
             return Result.error("Error updating survey status!");
