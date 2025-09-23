@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="TaiExam.mapper.ExamMapper">
+
+    <select id="getAllExams" resultType="Exam">
+        SELECT * FROM exam WHERE created_by = #{userId}
+    </select>
+
+
+    <select id="getAllExamIds" resultType="Integer">
+        SELECT * FROM exam
+    </select>
+
+    <select id="getExamById" resultType="Exam">
+        SELECT * FROM exam WHERE  id = #{id}
+    </select>
+
+    <select id="getExamsByPage" resultMap="examResultMap">
+        SELECT
+        s.*,
+        u.name AS createdByName  <!-- 联表查询获取创建者姓名 -->
+        FROM exam s
+        LEFT JOIN users u ON s.created_by = u.id  <!-- 关联用户表 -->
+        <where>
+            <!-- 权限控制 -->
+            (s.created_by = #{userId} OR #{role} = '超级管理员')
+
+            <!-- 模糊查询 -->
+            <if test="keyword != null and keyword != ''">
+                AND s.name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 定义结果映射 -->
+    <resultMap id="examResultMap" type="Exam">
+        <!-- 主表字段 -->
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="allowView" column="allow_view"/>
+        <result property="status" column="status"/>
+        <!-- 其他exam字段... -->
+        <!-- 关联字段 -->
+        <result property="createdByName" column="createdByName"/>
+        <result property="isCategory" column="is_category"/>
+    </resultMap>
+
+    <!-- 修改后的总数统计查询 -->
+    <select id="getExamCount" resultType="int">
+        SELECT COUNT(*) FROM exam
+        <where>
+            (created_by = #{userId} OR #{role} = '超级管理员')
+            <if test="keyword != null and keyword != ''">
+                AND name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="createExam"  useGeneratedKeys="true" keyProperty="id" keyColumn=" id">
+        INSERT INTO exam (name, description, allow_view,is_category, created_by, created_at)
+        VALUES (#{name}, #{description}, #{allowView},#{isCategory}, #{createdBy}, NOW())
+    </insert>
+
+    <update id="updateExam">
+        UPDATE exam
+        SET name = #{name}, description = #{description}, allow_view = #{allowView},is_category=#{isCategory},
+            updated_at = NOW(),status = #{status}
+        WHERE  id = #{id}
+    </update>
+
+    <delete id="deleteExam">
+        DELETE FROM exam WHERE  id = #{id}
+    </delete>
+
+</mapper>

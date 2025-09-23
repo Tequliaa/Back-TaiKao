@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="SurveySystem.mapper.QuestionMapper">
+<mapper namespace="TaiExam.mapper.QuestionMapper">
 
     <resultMap id="questionResultMap" type="Question">
         <id property="questionId" column="questionId"/>
-        <result property="surveyId" column="surveyId"/>
+        <result property="examId" column="examId"/>
         <result property="description" column="description"/>
         <result property="type" column="type"/>
         <result property="isRequired" column="isRequired"/>
@@ -14,7 +14,7 @@
         <result property="createdAt" column="createdAt"/>
         <result property="updatedAt" column="updatedAt"/>
         <result property="categoryId" column="CategoryId"/>
-        <result property="surveyName" column="surveyName"/>
+        <result property="examName" column="examName"/>
         <result property="categoryName" column="categoryName"/>
         <result property="maxSelections" column="maxSelections"/>
         <result property="minSelections" column="minSelections"/>
@@ -26,7 +26,7 @@
     <sql id="baseQuery">
         SELECT
             q.question_id AS questionId,
-            q.survey_id AS surveyId,
+            q.exam_id AS examId,
             q.description,
             q.type,
             q.is_required AS isRequired,
@@ -41,26 +41,26 @@
             q.created_at AS createdAt,
             q.updated_at AS updatedAt,
             q.primary_category_id AS CategoryId,
-            s.name AS surveyName,
+            e.name AS examName,
             c.category_name AS categoryName
         FROM Questions q
-                 JOIN Surveys s ON q.survey_id = s.survey_id
+                 JOIN exam e ON q.exam_id = e.id
                  LEFT JOIN Category c ON q.primary_category_id = c.category_id
     </sql>
 
     <select id="getAllQuestions" resultMap="questionResultMap">
         <include refid="baseQuery"/>
         WHERE
-        <if test="surveyId != 0">
-            q.survey_id = #{surveyId} AND
+        <if test="examId != 0">
+            q.exam_id = #{examId} AND
         </if>
-        s.created_by = #{userId}
+        e.created_by = #{userId}
         ORDER BY q.sort_key, q.primary_category_id
     </select>
 
-    <select id="getQuestionsBySurveyId" resultMap="questionResultMap" parameterType="int">
+    <select id="getQuestionsByExamId" resultMap="questionResultMap" parameterType="int">
         <include refid="baseQuery"/>
-        WHERE q.survey_id = #{surveyId} ORDER BY q.sort_key,q.primary_category_id
+        WHERE q.exam_id = #{examId} ORDER BY q.sort_key,q.primary_category_id
     </select>
 
     <select id="getQuestionById" resultMap="questionResultMap" parameterType="int">
@@ -70,10 +70,10 @@
 
     <insert id="addQuestionAndReturnId" parameterType="Question" useGeneratedKeys="true" keyProperty="questionId" keyColumn="question_id">
         INSERT INTO questions
-        (description, type, is_required, is_open, display_type,sort_type,sort_key,instructions,primary_category_id, survey_id, is_skip,max_selections,min_selections)
+        (description, type, is_required, is_open, display_type,sort_type,sort_key,instructions,primary_category_id, exam_id, is_skip,max_selections,min_selections)
         VALUES
             (#{description}, #{type}, #{isRequired},#{isOpen},#{displayType},#{sortType},#{sortKey},
-             #{instructions}, #{categoryId}, #{surveyId}, #{isSkip},#{maxSelections},#{minSelections})
+             #{instructions}, #{categoryId}, #{examId}, #{isSkip},#{maxSelections},#{minSelections})
     </insert>
 
     <update id="updateQuestion" parameterType="Question">
@@ -87,7 +87,7 @@
             sort_type = #{sortType},
             sort_key = #{sortKey},
             instructions = #{instructions},
-            survey_id = #{surveyId},
+            exam_id = #{examId},
             max_selections =#{maxSelections},
             min_selections =#{minSelections},
             display_type =#{displayType},
@@ -102,9 +102,9 @@
     <select id="getQuestionsByPage" resultMap="questionResultMap">
         <include refid="baseQuery"/>
         <where>
-            s.created_by = #{userId}
-            <if test="surveyId != 0">
-                AND q.survey_id = #{surveyId}
+            e.created_by = #{userId}
+            <if test="examId != 0">
+                AND q.exam_id = #{examId}
             </if>
             <if test="categoryId != 0">
                 AND q.primary_category_id = #{categoryId}
@@ -113,18 +113,18 @@
                 AND q.description LIKE CONCAT('%', #{keyword}, '%')
             </if>
         </where>
-        ORDER BY q.survey_id, q.sort_key, q.primary_category_id
+        ORDER BY q.exam_id, q.sort_key, q.primary_category_id
         LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <select id="getQuestionCount" resultType="int">
         SELECT COUNT(*)
         FROM Questions q
-        JOIN Surveys s ON q.survey_id = s.survey_id
+        JOIN exam e ON q.exam_id = e.id
         <where>
-            s.created_by = #{userId}
-            <if test="surveyId != 0">
-                AND q.survey_id = #{surveyId}
+            e.created_by = #{userId}
+            <if test="examId != 0">
+                AND q.exam_id = #{examId}
             </if>
             <if test="categoryId != 0">
                 AND q.primary_category_id = #{categoryId}

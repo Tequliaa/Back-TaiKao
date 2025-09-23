@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaiExam.mapper.UserExamMapper">
+
+    <!-- 定义 UserExam 的 resultMap -->
+    <resultMap id="UserExamResultMap" type="UserExam">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="exam_id" property="examId"/>
+        <result column="department_id" property="departmentId"/>
+        <result column="status" property="status"/>
+        <result column="assigned_at" property="assignedAt"/>
+        <result column="completed_at" property="completedAt"/>
+        <result column="exam_name" property="examName"/>
+        <result column="description" property="examDescription"/>
+        <result column="allow_view" property="allowView"/>
+        <result column="user_name" property="username"/>
+        <result column="department_name" property="departmentName"/>
+    </resultMap>
+
+    <!-- 获取未完成的用户列表，带分页和部门名称 -->
+    <select id="getUserInfoByExamId" resultMap="UserExamResultMap">
+        SELECT us.user_id, us.status,u.name AS user_name, u.department_id, d.name AS department_name
+        FROM user_exam us
+        JOIN users u ON us.user_id = u.id
+        JOIN departments d ON u.department_id = d.id
+        WHERE us.exam_id = #{examId} AND us.status != '已完成'
+        <if test="departmentId != 0">
+            AND u.department_id = #{departmentId}
+        </if>
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 获取未完成的用户数量 -->
+    <select id="getUserInfoCount" resultType="int">
+        SELECT COUNT(*)
+        FROM user_exam us
+        JOIN users u ON us.user_id = u.id
+        WHERE us.exam_id = #{examId} AND us.status != '已完成'
+        <if test="departmentId != 0">
+            AND u.department_id = #{departmentId}
+        </if>
+    </select>
+
+    <!-- 获取部门相关的用户问卷信息 -->
+    <select id="getUserDepartmentInfoByExamId" resultMap="UserExamResultMap">
+        SELECT DISTINCT u.department_id, d.name AS department_name
+        FROM user_exam us
+                 JOIN users u ON us.user_id = u.id
+                 JOIN departments d ON u.department_id = d.id
+        WHERE us.exam_id = #{examId}
+    </select>
+
+    <!-- 获取用户和问卷的记录 -->
+    <select id="getUserExamByUserIdAndExamId" resultMap="UserExamResultMap">
+        SELECT us.id, us.user_id, us.exam_id, us.status, us.assigned_at, us.completed_at
+        FROM user_exam us
+        WHERE us.user_id = #{userId} AND us.exam_id = #{examId}
+    </select>
+
+    <!-- 为部门的用户分配问卷 -->
+    <insert id="assignExamToDepartment">
+        INSERT INTO user_exam (user_id, exam_id, status)
+        VALUES
+        <foreach collection="users" item="user" separator=",">
+            (#{user.id}, #{userExam.examId}, #{userExam.status})
+        </foreach>
+    </insert>
+
+
+    <!-- 为用户分配问卷 -->
+    <insert id="assignExamsToUser">
+        INSERT INTO user_exam (user_id, exam_id)
+        VALUES
+        <foreach collection="departmentExams" item="exam" separator=",">
+            (#{userId}, #{exam.examId})
+        </foreach>
+    </insert>
+
+    <!-- 为用户分配问卷 -->
+    <insert id="assignExamsToUsers">
+        INSERT IGNORE INTO user_exam (user_id, exam_id)
+        VALUES
+        <foreach collection="users" item="user" separator=",">
+            <foreach collection="departmentExams" item="exam" separator=",">
+                (#{user.id}, #{exam.examId})
+            </foreach>
+        </foreach>
+    </insert>
+
+    <!-- 新增用户问卷记录 -->
+    <insert id="addUserExam">
+        INSERT INTO user_exam (user_id, exam_id, status)
+        VALUES (#{userExam.userId}, #{userExam.examId}, #{userExam.status})
+    </insert>
+
+    <!-- 更新问卷状态 -->
+    <update id="updateExamStatus">
+        UPDATE user_exam
+        SET status = #{status}, completed_at = #{completedAt}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新问卷状态（根据exam_id和user_id） -->
+    <update id="updateExamStatusByExamAndUser">
+        UPDATE user_exam
+        SET status = #{status}, completed_at = #{completedAt}
+        WHERE exam_id = #{examId} AND user_id = #{userId}
+    </update>
+
+    <!-- 查询用户问卷，支持分页和关键字搜索 -->
+    <select id="getExamsByUserId" resultMap="UserExamResultMap">
+        SELECT us.id, us.user_id, us.exam_id, us.status, us.assigned_at, us.completed_at,
+        e.name AS exam_name, e.description, e.allow_view,
+        u.name AS user_name  <!-- 添加用户名 -->
+        FROM user_exam us
+        JOIN exam e ON us.exam_id = e.id
+        JOIN users u ON us.user_id = u.id  <!-- 新增关联users表 -->
+        WHERE us.user_id = #{userId}
+        <if test="keyword != null and keyword != ''">
+            AND (e.name LIKE CONCAT('%', #{keyword}, '%')
+            OR e.description LIKE CONCAT('%', #{keyword}, '%')
+            OR u.name LIKE CONCAT('%', #{keyword}, '%'))  <!-- 可选：用户名也加入搜索 -->
+        </if>
+        ORDER BY us.assigned_at DESC  <!-- 建议添加排序 -->
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 获取用户的问卷总数，支持关键字搜索 -->
+    <select id="getExamCountByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM user_exam us
+        JOIN exam e ON us.exam_id = e.id
+        WHERE us.user_id = #{userId}
+        <if test="keyword != null and keyword != ''">
+            AND (s.name LIKE CONCAT('%', #{keyword}, '%') OR s.description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+</mapper>

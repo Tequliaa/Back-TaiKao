@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaiExam.mapper.DepartmentExamMapper">
+    <!-- 新增部门问卷记录，通过联表查询获取department_name -->
+    <insert id="assignToDepartment" parameterType="DepartmentExam">
+        INSERT INTO department_exam (department_id, department_name, exam_id, assign_at)
+        SELECT
+            #{departmentId} as department_id,
+            d.name as department_name,
+            #{examId} as exam_id,
+            NOW() as assign_at
+        FROM departments d
+        WHERE d.id = #{departmentId}
+    </insert>
+
+    <!-- 获取所有部门问卷信息 -->
+    <select id="getDepartmentExams" resultType="DepartmentExam">
+        SELECT * FROM department_exam where department_id =#{departmentId}
+    </select>
+
+    <!-- 检查发放过问卷 -->
+    <select id="checkAssignedExam" resultType="boolean">
+        SELECT COUNT(1) > 0 FROM department_exam WHERE exam_id = #{examId} AND department_id = #{departmentId}
+    </select>
+</mapper>

@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="SurveySystem.mapper.ResponseMapper">
+<mapper namespace="TaiExam.mapper.ResponseMapper">
 
     <!-- 检查是否存在答卷 -->
     <select id="checkResponseExists" resultType="boolean">
-        SELECT COUNT(1) > 0 FROM responses WHERE user_id = #{userId} AND survey_id = #{surveyId}
+        SELECT COUNT(1) > 0 FROM responses WHERE user_id = #{userId} AND exam_id = #{examId}
     </select>
 
     <!-- 批量插入答卷 -->
     <insert id="saveResponses" parameterType="Response">
-        INSERT INTO responses (survey_id, question_id, option_id, row_id, column_id, user_id, ip_address, response_data, created_at)
+        INSERT INTO responses (exam_id, question_id, option_id, row_id, column_id, user_id, ip_address, response_data, created_at)
         VALUES
         <foreach collection="responses" item="response" separator=",">
-            (#{response.surveyId}, #{response.questionId}, #{response.optionId}, #{response.rowId}, #{response.columnId},
+            (#{response.examId}, #{response.questionId}, #{response.optionId}, #{response.rowId}, #{response.columnId},
             #{response.userId}, #{response.ipAddress}, #{response.responseData}, #{response.createdAt})
         </foreach>
     </insert>
 
     <!-- 保存文件路径 -->
     <insert id="saveFilePathToDatabase" parameterType="Response">
-        INSERT INTO responses (survey_id, question_id, user_id, file_path, created_at, is_valid, ip_address)
-        VALUES (#{surveyId}, #{questionId}, #{userId}, #{filePath}, NOW(), 1, #{ipAddress})
+        INSERT INTO responses (exam_id, question_id, user_id, file_path, created_at, is_valid, ip_address)
+        VALUES (#{examId}, #{questionId}, #{userId}, #{filePath}, NOW(), 1, #{ipAddress})
     </insert>
 
     <!-- 使答卷无效 -->
     <update id="resetIsValidForResponses" parameterType="Response">
-        UPDATE responses SET is_valid = 0 WHERE user_id = #{userId} AND survey_id = #{surveyId}
+        UPDATE responses SET is_valid = 0 WHERE user_id = #{userId} AND exam_id = #{examId}
     </update>
 
     <!-- 更新答卷数据 -->
@@ -44,14 +44,14 @@
         UPDATE responses
         SET response_data = #{responseData}, ip_address = #{ipAddress}, created_at = #{createdAt},
             is_valid = #{isValid},sort_order=#{sortOrder}
-        WHERE user_id = #{userId} AND survey_id = #{surveyId} AND question_id = #{questionId}
+        WHERE user_id = #{userId} AND exam_id = #{examId} AND question_id = #{questionId}
           AND option_id = #{optionId} AND row_id = #{rowId} AND column_id = #{columnId}
     </update>
 
     <!-- 获取问卷答题统计 -->
     <resultMap id="responseSummaryMap" type="Response">
         <result property="userId" column="user_id"/>
-        <result property="surveyId" column="survey_id"/>
+        <result property="examId" column="exam_id"/>
         <result property="userName" column="name"/>
         <result property="totalQuestions" column="total_questions"/>
         <result property="createdAt" column="last_response_time"/>
@@ -59,10 +59,10 @@
         <result property="ipAddress" column="ip_address"/>
     </resultMap>
 
-    <select id="getSurveyResponsesSummary" resultMap="responseSummaryMap">
+    <select id="getExamResponsesSummary" resultMap="responseSummaryMap">
         WITH latest_responses AS (
-            SELECT r.user_id, r.survey_id, r.ip_address,
-                   ROW_NUMBER() OVER (PARTITION BY r.user_id, r.survey_id ORDER BY r.created_at DESC) AS rn
+            SELECT r.user_id, r.exam_id, r.ip_address,
+                   ROW_NUMBER() OVER (PARTITION BY r.user_id, r.exam_id ORDER BY r.created_at DESC) AS rn
             FROM responses r
         ),
              response_summary AS (
@@ -70,7 +70,7 @@
                         COUNT(DISTINCT r.question_id) AS total_questions,
                         MAX(r.created_at) AS last_response_time
                  FROM responses r
-                 WHERE r.survey_id = #{surveyId}
+                 WHERE r.exam_id = #{examId}
                  GROUP BY r.user_id
              )
         SELECT rs.user_id,
@@ -81,26 +81,26 @@
                lr.ip_address
         FROM response_summary rs
                  JOIN users u ON rs.user_id = u.id
-                 LEFT JOIN user_survey us ON rs.user_id = us.user_id AND us.survey_id = #{surveyId}
-                 LEFT JOIN latest_responses lr ON rs.user_id = lr.user_id AND lr.survey_id = #{surveyId} AND lr.rn = 1
+                 LEFT JOIN user_exam us ON rs.user_id = us.user_id AND us.exam_id = #{examId}
+                 LEFT JOIN latest_responses lr ON rs.user_id = lr.user_id AND lr.exam_id = #{examId} AND lr.rn = 1
             LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
     <!-- 统计问卷答题人数 -->
-    <select id="countSurveyResponses" resultType="int">
-        SELECT COUNT(DISTINCT user_id) FROM responses WHERE survey_id = #{surveyId}
+    <select id="countExamResponses" resultType="int">
+        SELECT COUNT(DISTINCT user_id) FROM responses WHERE exam_id = #{examId}
     </select>
 
     <!-- 获取用户答题记录 -->
-    <select id="getUserResponsesForSurvey" resultType="Response">
-        SELECT * FROM responses WHERE survey_id = #{surveyId} AND user_id = #{userId}
+    <select id="getUserResponsesForExam" resultType="Response">
+        SELECT * FROM responses WHERE exam_id = #{examId} AND user_id = #{userId}
     </select>
 
     <!-- 获取用户已有的文件响应记录 -->
     <select id="selectExistingFileResponses" resultType="Response">
         SELECT * FROM responses
         WHERE user_id = #{userId}
-          AND survey_id = #{surveyId}
+          AND exam_id = #{examId}
           AND is_valid = 1
           AND file_path IS NOT NULL
     </select>
@@ -117,7 +117,7 @@
         UPDATE responses
         SET is_valid = 0
         WHERE user_id = #{userId}
-        AND survey_id = #{surveyId}
+        AND exam_id = #{examId}
         AND response_id NOT IN
         <foreach collection="excludedIds" item="id" open="(" separator="," close=")">
             #{id}

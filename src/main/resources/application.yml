@@ -1,8 +1,8 @@
 spring:
   application:
-    name: surveyPlatform
+    name: taiExam
   datasource:
-    url: jdbc:mysql://localhost:3306/plat_question?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/tai_exam?useSSL=false&serverTimezone=UTC
     username: root
     password: rootroot
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -11,7 +11,7 @@ spring:
       host: 127.0.0.1
       port: 6379
       password: root@123456
-      database: 5
+      database: 7
       timeout: 5000
       lettuce:
         pool:
@@ -61,13 +61,13 @@ server:
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: SurveySystem.entity
+  type-aliases-package: TaiExam.model.entity
   configuration:
     map-underscore-to-camel-case: true
     # 新增：打印SQL语句到控制台
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   mapper-scan:
-    base-package: SurveySystem.mapper
+    base-package: TaiExam.mapper
 
 
 jwt:
@@ -91,4 +91,4 @@ springdoc:
   group-configs:
     - group: 'default'
       paths-to-match: '/**'
-      packages-to-scan: SurveySystem.controller
+      packages-to-scan: TaiExam.controller

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="SurveySystem.mapper.OptionMapper">
+<mapper namespace="TaiExam.mapper.OptionMapper">
 
     <resultMap id="optionResultMap" type="Option">
         <id property="optionId" column="option_id"/>
@@ -110,8 +110,8 @@
         SELECT o.*, q.description AS question_name
         FROM options o
                  JOIN questions q ON o.question_id = q.question_id
-                 JOIN surveys s ON q.survey_id = s.survey_id
-        WHERE s.created_by = #{userId}
+                 JOIN exam e ON q.exam_id = e.id
+        WHERE e.created_by = #{userId}
     </select>
 
     <!-- 分页获取选项（限制用户创建的问卷） -->
@@ -119,9 +119,9 @@
         SELECT o.*, q.description AS question_name
         FROM options o
         JOIN questions q ON o.question_id = q.question_id
-        JOIN surveys s ON q.survey_id = s.survey_id
+        JOIN exam e ON q.exam_id = e.id
         <where>
-            s.created_by = #{userId}
+            e.created_by = #{userId}
             <if test="questionId != 0">
                 AND o.question_id = #{questionId}
             </if>
@@ -134,9 +134,9 @@
         SELECT COUNT(*)
         FROM options o
         JOIN questions q ON o.question_id = q.question_id
-        JOIN surveys s ON q.survey_id = s.survey_id
+        JOIN exam e ON q.exam_id = e.id
         <where>
-            s.created_by = #{userId}
+            e.created_by = #{userId}
             <if test="questionId != 0">
                 AND o.question_id = #{questionId}
             </if>

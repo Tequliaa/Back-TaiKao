@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>surveyPlatform</artifactId>
+	<artifactId>taiExam</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>surveyPlatform</name>
-	<description>surveyPlatform</description>
+	<name>TaiExam</name>
+	<description>TaiExam</description>
 	<url/>
 	<licenses>
 		<license/>

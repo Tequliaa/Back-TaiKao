@@ -22,8 +22,8 @@
 ## 项目结构
 
 ```
-src/main/java/SurveySystem/
-├── SurveyPlatformApplication.java    # 应用入口
+src/main/java/TaiExam/
+├── TaiExamApplication.java    # 应用入口
 ├── annotation/                       # 自定义注解
 ├── aspect/                           # AOP切面
 ├── config/                           # 配置类
@@ -86,7 +86,7 @@ src/main/java/SurveySystem/
 - 未完成列表状态推送
 - 管理员操作同步
 
-WebSocket配置位于`config/WebSocketConfig.java`，处理器实现位于`controller/SurveyWebSocketHandler.java`。
+WebSocket配置位于`config/WebSocketConfig.java`，处理器实现位于`controller/ExamWebSocketHandler.java`。
 
 ### 权限管理
 
@@ -126,7 +126,7 @@ WebSocket配置位于`config/WebSocketConfig.java`，处理器实现位于`contr
 
 ### 数据库配置
 
-1. 创建MySQL数据库：`survey_platform`
+1. 创建MySQL数据库：`tai_exam`
 2. 导入数据库脚本（如有）
 3. 配置`application.properties`中的数据库连接信息
 
@@ -149,7 +149,7 @@ mvn clean package
 ### 运行项目
 
 ```bash
-java -jar target/surveyPlatform-0.0.1-SNAPSHOT.jar
+java -jar target/examPlatform-0.0.1-SNAPSHOT.jar
 ```
 
 ## API文档
@@ -169,13 +169,13 @@ java -jar target/surveyPlatform-0.0.1-SNAPSHOT.jar
 - `user_role`：用户角色关联表
 - `role_permission`：角色权限关联表
 - `department`：部门表
-- `survey`：问卷表
+- `exam`：问卷表
 - `category`：问卷分类表
 - `question`：问题表
 - `option`：选项表
 - `response`：答卷表
-- `user_survey`：用户问卷关联表
-- `department_survey`：部门问卷关联表
+- `user_exam`：用户问卷关联表
+- `department_exam`：部门问卷关联表
 
 ## 安全措施
 
@@ -188,7 +188,7 @@ java -jar target/surveyPlatform-0.0.1-SNAPSHOT.jar
 
 ## 注意事项
 
-1. 开发环境下，WebSocket端点为`/ws/survey/{surveyId}`
+1. 开发环境下，WebSocket端点为`/ws/exam/{examId}`
 2. 生产环境需要配置HTTPS和WebSocket的WSS协议
 3. 确保Redis服务正常运行，否则缓存功能不可用
 4. 系统日志使用SLF4J，配置日志级别可在`application.properties`中设置
