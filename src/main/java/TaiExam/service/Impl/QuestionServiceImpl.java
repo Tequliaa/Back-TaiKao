@@ -57,7 +57,7 @@ public class QuestionServiceImpl implements QuestionService {
         List<Option> options = optionService.getOptionsByQuestionId(questionId);
         if(options!=null&&options.size()>0){
             for(Option option:options){
-                optionService.deleteOption(option.getOptionId());
+                optionService.deleteOption(option.getId());
             }
         }
         return questionMapper.deleteQuestion(questionId);

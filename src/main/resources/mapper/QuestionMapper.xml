@@ -45,7 +45,7 @@
             c.category_name AS categoryName
         FROM Questions q
                  JOIN exam e ON q.exam_id = e.id
-                 LEFT JOIN Category c ON q.primary_category_id = c.category_id
+                 LEFT JOIN Category c ON q.primary_category_id = c.id
     </sql>
 
     <select id="getAllQuestions" resultMap="questionResultMap">

@@ -128,7 +128,7 @@ public class ExamSubmitConsumer {
                     for (Option row : rowOptions) {
                         for (Option column : columnOptions) {
                             Response responseRecord = createInitialResponse(examId, question.getQuestionId(),
-                                    userId, ipAddress, row.getOptionId(), column.getOptionId());
+                                    userId, ipAddress, row.getId(), column.getId());
                             initialResponses.add(responseRecord);
                         }
                     }
@@ -138,7 +138,7 @@ public class ExamSubmitConsumer {
                     for (Option option : options) {
                         Response responseRecord = createInitialResponse(examId, question.getQuestionId(),
                                 userId, ipAddress, 0, 0);
-                        responseRecord.setOptionId(option.getOptionId());
+                        responseRecord.setOptionId(option.getId());
                         initialResponses.add(responseRecord);
                     }
                 } else if ("填空".equals(questionType)) {

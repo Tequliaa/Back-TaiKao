@@ -3,7 +3,7 @@
 <mapper namespace="TaiExam.mapper.CategoryMapper">
 
     <resultMap id="categoryResultMap" type="Category">
-        <id property="categoryId" column="category_id"/>
+        <id property="id" column="id"/>
         <result property="categoryName" column="category_name"/>
         <result property="parentCategoryId" column="parent_category_id"/>
         <result property="parentCategoryName" column="parent_category_name"/>
@@ -18,14 +18,14 @@
     <!-- 获取所有分类 -->
     <select id="getAllCategories" resultMap="categoryResultMap">
         SELECT c.*, p.category_name AS parent_category_name
-        FROM Category c LEFT JOIN Category p ON c.parent_category_id = p.category_id
+        FROM Category c LEFT JOIN Category p ON c.parent_category_id = p.id
         WHERE c.created_by = #{userId}
     </select>
 
     <!-- 根据名称获取8条最近更新的分类 -->
     <select id="getAllCategoriesById" resultMap="categoryResultMap" parameterType="int">
         SELECT c.*, p.category_name AS parent_category_name
-        FROM Category c LEFT JOIN Category p ON c.parent_category_id = p.category_id
+        FROM Category c LEFT JOIN Category p ON c.parent_category_id = p.id
         WHERE c.created_by = #{userId}
         ORDER BY c.updated_at DESC
             LIMIT 8
@@ -49,7 +49,7 @@
 
     <!-- 删除分类 -->
     <delete id="deleteCategory" parameterType="int">
-        DELETE FROM Category WHERE category_id = #{categoryId}
+        DELETE FROM Category WHERE id = #{categoryId}
     </delete>
 
     <!-- 更新分类 -->
@@ -62,7 +62,7 @@
             updated_at = NOW(),
             created_at =NOW(),
             created_by =#{createdBy}
-        WHERE category_id = #{categoryId}
+        WHERE id = #{categoryId}
     </update>
 
     <!-- 更新分类 -->
@@ -70,19 +70,19 @@
         UPDATE Category
         SET sort_key=#{sortKey},
             updated_at = NOW()
-        WHERE category_id = #{categoryId}
+        WHERE id = #{categoryId}
     </update>
 
     <!-- 根据ID获取分类 -->
     <select id="getCategoryByCategoryId" resultMap="categoryResultMap" parameterType="int">
-        SELECT * FROM Category WHERE category_id = #{categoryId}
+        SELECT * FROM Category WHERE id = #{categoryId}
     </select>
 
 
     <!-- 分页获取分类 -->
     <select id="getCategoriesByPage" resultMap="categoryResultMap">
         SELECT c.*, p.category_name AS parent_category_name
-        FROM category c LEFT JOIN category p ON c.parent_category_id = p.category_id
+        FROM category c LEFT JOIN category p ON c.parent_category_id = p.id
         <if test="keyword != null and keyword != ''">
             WHERE c.category_name LIKE CONCAT('%', #{keyword}, '%') OR c.description LIKE CONCAT('%', #{keyword}, '%')
         </if>

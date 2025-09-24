@@ -3,7 +3,7 @@
 <mapper namespace="TaiExam.mapper.OptionMapper">
 
     <resultMap id="optionResultMap" type="Option">
-        <id property="optionId" column="option_id"/>
+        <id property="id" column="id"/>
         <result property="questionId" column="question_id"/>
         <result property="type" column="type"/>
         <result property="description" column="description"/>
@@ -15,7 +15,7 @@
         <result property="checkCount" column="count"/>
     </resultMap>
 
-    <insert id="addOption" parameterType="Option" useGeneratedKeys="true" keyProperty="optionId">
+    <insert id="addOption" parameterType="Option" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO Options
             (question_id, type, description, sort_key, is_open, is_skip)
         VALUES
@@ -30,15 +30,15 @@
                            is_open = #{isOpenOption},
                            is_skip = #{isSkip},
                            skip_to = #{skipTo}
-        WHERE option_id = #{optionId}
+        WHERE id = #{id}
     </update>
 
     <delete id="deleteOption" parameterType="int">
-        DELETE FROM Options WHERE option_id = #{optionId}
+        DELETE FROM Options WHERE id = #{optionId}
     </delete>
 
     <select id="getOptionById" resultMap="optionResultMap" parameterType="int">
-        SELECT * FROM Options WHERE option_id = #{optionId}
+        SELECT * FROM Options WHERE id = #{optionId}
     </select>
 
 
@@ -50,7 +50,7 @@
                        SELECT AVG(r.sort_order)
                        FROM Responses r
                                 JOIN Users u ON r.user_id = u.id
-                       WHERE r.option_id = o.option_id
+                       WHERE r.option_id = o.id
                          AND r.is_valid = 1
                          AND (u.department_id = #{departmentId} OR #{departmentId} = 0)
                    )
@@ -58,7 +58,7 @@
                        SELECT AVG(CAST(r.response_data AS DECIMAL))
                        FROM Responses r
                                 JOIN Users u ON r.user_id = u.id
-                       WHERE r.option_id = o.option_id
+                       WHERE r.option_id = o.id
                          AND r.is_valid = 1
                          AND (u.department_id = #{departmentId} OR #{departmentId} = 0)
                    )
@@ -66,7 +66,7 @@
                        SELECT COUNT(*)
                        FROM Responses r
                                 JOIN Users u ON r.user_id = u.id
-                       WHERE r.option_id = o.option_id
+                       WHERE r.option_id = o.id
                          AND r.is_valid = 1
                          AND (u.department_id = #{departmentId} OR #{departmentId} = 0)
                    )

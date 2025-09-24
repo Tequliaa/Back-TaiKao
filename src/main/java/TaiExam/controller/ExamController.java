@@ -222,7 +222,7 @@ public class ExamController {
                         option.setSortKey("100");
                     }
                     option.setQuestionId(questionId);
-                    if(option.getOptionId()!=0){
+                    if(option.getId()!=0){
                         optionService.updateOption(option);
                     }else {
                         optionService.addOption(option);
@@ -253,7 +253,7 @@ public class ExamController {
                         option.setSortKey("100");
                     }
                     option.setQuestionId(questionId);
-                    if(option.getOptionId()!=0){
+                    if(option.getId()!=0){
                         optionService.updateOption(option);
                     }else {
                         optionService.addOption(option);

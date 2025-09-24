@@ -9,7 +9,7 @@ import java.sql.Timestamp;
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int categoryId;          // 分类ID
+    private int id;          // 分类ID
     private String categoryName;
     private Integer parentCategoryId; // 上一级分类ID
     private String parentCategoryName;// 分类名称

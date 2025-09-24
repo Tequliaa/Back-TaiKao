@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class OptionDTO {
-    private int optionId;
+    private int id;
     private int questionId;
     private String questionName;
     private String type;

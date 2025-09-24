@@ -9,7 +9,7 @@ import lombok.Data;
 public class Option {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int optionId;
+    private int id;
     private int questionId;
     private String questionName;
     private String type;
