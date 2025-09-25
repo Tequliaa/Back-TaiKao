@@ -3,7 +3,7 @@
 <mapper namespace="TaiExam.mapper.QuestionMapper">
 
     <resultMap id="questionResultMap" type="Question">
-        <id property="questionId" column="questionId"/>
+        <id property="id" column="id"/>
         <result property="examId" column="examId"/>
         <result property="description" column="description"/>
         <result property="type" column="type"/>
@@ -25,7 +25,7 @@
 
     <sql id="baseQuery">
         SELECT
-            q.question_id AS questionId,
+            q.id as id,
             q.exam_id AS examId,
             q.description,
             q.type,
@@ -65,10 +65,10 @@
 
     <select id="getQuestionById" resultMap="questionResultMap" parameterType="int">
         <include refid="baseQuery"/>
-        WHERE q.question_id = #{questionId}
+        WHERE q.id = #{questionId}
     </select>
 
-    <insert id="addQuestionAndReturnId" parameterType="Question" useGeneratedKeys="true" keyProperty="questionId" keyColumn="question_id">
+    <insert id="addQuestionAndReturnId" parameterType="Question" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
         INSERT INTO questions
         (description, type, is_required, is_open, display_type,sort_type,sort_key,instructions,primary_category_id, exam_id, is_skip,max_selections,min_selections)
         VALUES
@@ -92,11 +92,11 @@
             min_selections =#{minSelections},
             display_type =#{displayType},
             primary_category_id = #{categoryId}
-        WHERE question_id = #{questionId}
+        WHERE id = #{id}
     </update>
 
     <delete id="deleteQuestion" parameterType="int">
-        DELETE FROM questions WHERE question_id = #{questionId}
+        DELETE FROM questions WHERE id = #{questionId}
     </delete>
 
     <select id="getQuestionsByPage" resultMap="questionResultMap">

@@ -72,7 +72,7 @@
                    )
                    END AS count
         FROM Options o
-            INNER JOIN Questions q ON o.question_id = q.question_id
+            INNER JOIN Questions q ON o.question_id = q.id
         WHERE o.question_id = #{questionId}
         ORDER BY
             CASE
@@ -109,7 +109,7 @@
     <select id="getAllOptions" resultMap="optionResultMap">
         SELECT o.*, q.description AS question_name
         FROM options o
-                 JOIN questions q ON o.question_id = q.question_id
+                 JOIN questions q ON o.question_id = q.id
                  JOIN exam e ON q.exam_id = e.id
         WHERE e.created_by = #{userId}
     </select>
@@ -118,7 +118,7 @@
     <select id="getOptionsByPage" resultMap="optionResultMap">
         SELECT o.*, q.description AS question_name
         FROM options o
-        JOIN questions q ON o.question_id = q.question_id
+        JOIN questions q ON o.question_id = q.id
         JOIN exam e ON q.exam_id = e.id
         <where>
             e.created_by = #{userId}
@@ -133,7 +133,7 @@
     <select id="getOptionCount" resultType="int">
         SELECT COUNT(*)
         FROM options o
-        JOIN questions q ON o.question_id = q.question_id
+        JOIN questions q ON o.question_id = q.id
         JOIN exam e ON q.exam_id = e.id
         <where>
             e.created_by = #{userId}

@@ -115,7 +115,7 @@ public class ExamController {
         Exam exam = examService.getExamById(id);
         List<Question> questions = questionService.getQuestionsByExamId(id);
         for (Question question : questions) {
-            List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
+            List<Option> options = optionService.getOptionsByQuestionId(question.getId());
             question.setOptions(options);
         }
 
@@ -208,9 +208,9 @@ public class ExamController {
         for(Question question:questions){
 
             //问题存在，做得是更新操作。临时id可能小于0
-            if(question.getQuestionId()>0){
+            if(question.getId()>0){
                 question.setExamId(exam.getId());
-                int questionId = question.getQuestionId();
+                int questionId = question.getId();
                 questionService.updateQuestion(question);
                 for(Option option:question.getOptions()){
                     //String questionType =question.getType();
@@ -235,7 +235,7 @@ public class ExamController {
                 question.setExamId(exam.getId());
                 questionService.addQuestionAndReturnId(question);
                 // Handle open/skip options if needed
-                int questionId =question.getQuestionId();
+                int questionId =question.getId();
                 if(question.getType().equals("排序")){
                     createRatingOption(questionId);
                 }

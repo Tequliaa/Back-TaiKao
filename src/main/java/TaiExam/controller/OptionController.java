@@ -85,7 +85,8 @@ public class OptionController {
     @PostMapping("/add")
     public Result<Void> createOption(@RequestBody Option option) {
         if (!"填空".equals(option.getType()) && option.getDescription() == null) {
-            throw new IllegalArgumentException("Description is required for non-blank options");
+            return Result.error("选项描述不得为空");
+            //throw new IllegalArgumentException("Description is required for non-blank options");
         }
         int examId = questionService.getQuestionById(option.getQuestionId()).getExamId();
         option.setExamId(examId);

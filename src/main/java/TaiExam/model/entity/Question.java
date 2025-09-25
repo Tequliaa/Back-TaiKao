@@ -13,7 +13,7 @@ import java.util.List;
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int questionId;
+    private int id;
     private int categoryId;
     private String description;
     private String type;

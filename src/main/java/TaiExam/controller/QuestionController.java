@@ -57,7 +57,7 @@ public class QuestionController {
 
         // Add options to each question
         questions.forEach(question ->
-                question.setOptions(optionService.getOptionsByQuestionId(question.getQuestionId()))
+                question.setOptions(optionService.getOptionsByQuestionId(question.getId()))
         );
 
         Map<String, Object> resultMap = new HashMap<>();
@@ -77,7 +77,7 @@ public class QuestionController {
                                                        @RequestParam int userId) {
         List<Question> questions = questionService.getAllQuestions(examId,userId);
         questions.forEach(question ->
-                question.setOptions(optionService.getOptionsByQuestionId(question.getQuestionId()))
+                question.setOptions(optionService.getOptionsByQuestionId(question.getId()))
         );
         System.out.println("question/getAll");
         //for(Question question:questions){
@@ -110,8 +110,12 @@ public class QuestionController {
      */
     @PostMapping("/add")
     public Result<Void> createQuestion(@RequestBody Question question) {
+        if (question.getDescription() == null || "".equals(question.getDescription())) {
+            return Result.error("问题描述不得为空");
+        }
+
         questionService.addQuestionAndReturnId(question);
-        int questionId =question.getQuestionId();
+        int questionId =question.getId();
 
         // Handle open/skip options if needed
         if (question.getIsOpen() == 1) {

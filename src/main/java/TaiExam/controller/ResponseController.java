@@ -115,7 +115,7 @@ public class ResponseController {
             questionAnalysisVO.setQuestionName(question.getDescription());
             questionAnalysisVO.setQuestionType(question.getType());
 
-            List<Option> options = optionService.getOptionsWithCheckCountByQuestionId(question.getQuestionId(), departmentId);
+            List<Option> options = optionService.getOptionsWithCheckCountByQuestionId(question.getId(), departmentId);
             List<OptionAnalysisVO> analysisOptions=new ArrayList<>();
             options.forEach(option -> {
                 OptionAnalysisVO optionAnalysisVO=new OptionAnalysisVO();
@@ -179,7 +179,7 @@ public class ResponseController {
                 exam = examService.getExamById(examId);
                 questions = questionService.getQuestionsByExamId(examId);
                 for (Question question : questions) {
-                    List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
+                    List<Option> options = optionService.getOptionsByQuestionId(question.getId());
                     question.setOptions(options);
                 }
 
@@ -219,7 +219,7 @@ public class ResponseController {
                 // 构建问题索引Map
                 questionIndexMap = new HashMap<>();
                 for (int i = 0; i < questions.size(); i++) {
-                    questionIndexMap.put(questions.get(i).getQuestionId(), i + 1);
+                    questionIndexMap.put(questions.get(i).getId(), i + 1);
                 }
 
                 // 数据库无数据
@@ -306,7 +306,7 @@ public class ResponseController {
                 exam = examService.getExamById(examId);
                 questions = questionService.getQuestionsByExamId(examId);
                 for (Question question : questions) {
-                    List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
+                    List<Option> options = optionService.getOptionsByQuestionId(question.getId());
                     question.setOptions(options);
                 }
 
@@ -351,7 +351,7 @@ public class ResponseController {
                     questionAnalysisVO.setQuestionName(question.getDescription());
                     questionAnalysisVO.setQuestionType(question.getType());
 
-                    List<Option> options = optionService.getOptionsWithCheckCountByQuestionId(question.getQuestionId(), departmentId);
+                    List<Option> options = optionService.getOptionsWithCheckCountByQuestionId(question.getId(), departmentId);
                     List<OptionAnalysisVO> analysisOptions = new ArrayList<>();
                     options.forEach(option -> {
                         OptionAnalysisVO optionAnalysisVO = new OptionAnalysisVO();
@@ -365,8 +365,8 @@ public class ResponseController {
 
                     // 处理矩阵题数据
                     if (question.getType().equals("矩阵单选") || question.getType().equals("矩阵多选")) {
-                        List<Map<String, Object>> cellData = optionService.getMatrixCellCheckCount(question.getQuestionId(), departmentId);
-                        matrixCellData.put(question.getQuestionId(), cellData);
+                        List<Map<String, Object>> cellData = optionService.getMatrixCellCheckCount(question.getId(), departmentId);
+                        matrixCellData.put(question.getId(), cellData);
                     }
                 }
 

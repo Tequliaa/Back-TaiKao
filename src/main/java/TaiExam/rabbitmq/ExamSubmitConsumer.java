@@ -122,27 +122,27 @@ public class ExamSubmitConsumer {
                 String questionType = String.valueOf(question.getType());
 
                 if ("矩阵单选".equals(questionType) || "矩阵多选".equals(questionType)) {
-                    List<Option> rowOptions = optionService.getRowOptionsByQuestionId(question.getQuestionId());
-                    List<Option> columnOptions = optionService.getColumnOptionsByQuestionId(question.getQuestionId());
+                    List<Option> rowOptions = optionService.getRowOptionsByQuestionId(question.getId());
+                    List<Option> columnOptions = optionService.getColumnOptionsByQuestionId(question.getId());
 
                     for (Option row : rowOptions) {
                         for (Option column : columnOptions) {
-                            Response responseRecord = createInitialResponse(examId, question.getQuestionId(),
+                            Response responseRecord = createInitialResponse(examId, question.getId(),
                                     userId, ipAddress, row.getId(), column.getId());
                             initialResponses.add(responseRecord);
                         }
                     }
                 } else if ("单选".equals(questionType) || "多选".equals(questionType)
                         || "评分题".equals(questionType)||"排序".equals(questionType)) {
-                    List<Option> options = optionService.getOptionsByQuestionId(question.getQuestionId());
+                    List<Option> options = optionService.getOptionsByQuestionId(question.getId());
                     for (Option option : options) {
-                        Response responseRecord = createInitialResponse(examId, question.getQuestionId(),
+                        Response responseRecord = createInitialResponse(examId, question.getId(),
                                 userId, ipAddress, 0, 0);
                         responseRecord.setOptionId(option.getId());
                         initialResponses.add(responseRecord);
                     }
                 } else if ("填空".equals(questionType)) {
-                    Response responseRecord = createInitialResponse(examId, question.getQuestionId(),
+                    Response responseRecord = createInitialResponse(examId, question.getId(),
                             userId, ipAddress, 0, 0);
                     initialResponses.add(responseRecord);
                 }
